@@ -46,6 +46,7 @@ TODO list for Dynamo 2
       4. Additional examples, see also 1.2
       5. Add reference to github for those wishing to contribute
       6. dynamo_manual.tex
+      7. Bibliography/references
 
 6. More optimization tasks
       1. Closed S+E, where we only care about S
@@ -55,11 +56,11 @@ TODO list for Dynamo 2
 
 7. More algorithms
       1. "Integrators"
-           * (expm), (eigendecomposition), expv, ode solvers (for time-dependent H:s and H_c:s), t-DMRG?
+           * (expm), (eigendecomposition), expv, ode solvers (for time-dependent H:s and H_c:s), t-DMRG, Taylor
       2. Gradients
-           * (GRAPE), (exact, finite diff, 1st order)
+           * (GRAPE), (exact, finite diff, 1st order), higher-order series
       3. Optimizers
-           * (k-BFGS, using fminunc), Newton-Raphson, Monotonic Krotov variant?, Simplex? (no gradient needed)
+           * (L-BFGS, using fminunc), Newton-Raphson, Monotonic Krotov variant?, NM simplex (no gradient needed)
 
 8. User interface / features
       1. More button-type ui controls for the ui window
@@ -74,6 +75,11 @@ TODO list for Dynamo 2
       3. Other features
           *  fix the stats system so that an interrupted optimization run can be continued
           *  automatic top curve sweeping function
+          *  plot axis labels should have physical units if possible (qsystem.TU)
+
+9. Cleanup
+      1. Delete unused functions
+      2. Delete old demos
 
 
 Random ideas and things to test:
@@ -104,6 +110,7 @@ Random ideas and things to test:
 
 - performance-compare error_full and the approximation given by error_real
 
+- automatic top-curve sweeper function, re-use optimal sequence from neighboring T, re-scale to new T
 - compare top-curve-sweeping for determining optimal T with direct tau-optimizing
 
 - Lots of profiling. why do we use almost 30% more time in task1 than Dynamo 1.2? recompute_timeslots is called more?!?

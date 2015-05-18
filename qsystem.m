@@ -79,7 +79,7 @@ classdef qsystem < matlab.mixin.Copyable
 
         if length(C) == self.dim
             % assume it's a Hamiltonian
-            C = -1i * comm(qsystem.check_hamiltonian(C, message));
+            C = -1i * superop_comm(qsystem.check_hamiltonian(C, message));
             C = full(C);  % TODO norm cannot handle sparse matrices, used in dynamo/gradient_test
             is_H = true;
         else
