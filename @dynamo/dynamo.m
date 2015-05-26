@@ -26,7 +26,7 @@ classdef dynamo < matlab.mixin.Copyable
   methods (Static)
     function ret = version()
     % Returns the current DYNAMO version.
-        ret = '1.4.0 alpha1';
+        ret = '1.4.0alpha3';
     end
 
 
@@ -248,8 +248,8 @@ classdef dynamo < matlab.mixin.Copyable
         self.system = sys;
 
         % init miscellaneous things
-        self.opt.ui_fig = [];
-        self.opt.max_violation = 0; % track the worst gradient approximation violation
+        self.config.ui_fig = [];
+        self.stats = {};
     end
 
 
@@ -470,23 +470,6 @@ classdef dynamo < matlab.mixin.Copyable
     end
 
 
-    function plot_stats(self, ax0)
-    % Plots optimization stats.
-        
-        [ax, h1, h2] = plotyy(ax0, self.stats.wall_time, abs(self.stats.error), ...
-                              self.stats.wall_time, self.stats.integral, 'semilogy', 'plot');
-        % For some strange reason only the first set of axes inherits the
-        % parent axes' properties, so we need to set the plotstyle separately for both.
-        set_plotstyle(ax(1));
-        set_plotstyle(ax(2));
-        title('Optimization Statistics')
-        xlabel('wall time (s)')
-        ylabel(ax(1), 'normalized error')
-        ylabel(ax(2), 'control integral')
-        set(h2, 'LineStyle','--')
-    end
-
-
     function plot_X(self, dt, k, ax, full_plot)
     % Plots the evolution of the initial system as a function of
     % time under the current control sequence.
@@ -587,6 +570,21 @@ classdef dynamo < matlab.mixin.Copyable
             x = 0.5 * (x + x'); % eliminate numerical errors
             p = eig(x);
         end
+    end
+
+    function shake(self, rel_change)
+    % Makes a small random perturbation to the control sequence, can be used
+    % to shake the system out of a local optimum.
+    % Does not touch the tau values.
+        self.seq.shake(rel_change);
+        self.cache.invalidate(); % flush the entire cache
+    end
+
+    function split(self, bins, n)
+    % Refines the sequence by splitting the given bins into n equal pieces.
+    % If an empty vector of bin numbers is given, the entire sequence is refined.
+        self.seq.split(bins, n);
+        self.cache_init(); % rebuild the cache
     end
   end
 end

@@ -6,7 +6,7 @@ function ui_refresh(self, full_plot, err)
         full_plot = true;
     end
     
-    h = self.opt.ui_fig;
+    h = self.config.ui_fig;
     % It's incredible how much work it takes just to make
     % MATLAB not steal window focus when it plots something.
     set(0, 'CurrentFigure', h);

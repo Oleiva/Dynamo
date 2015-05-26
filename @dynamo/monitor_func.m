@@ -10,9 +10,10 @@ drawnow(); % flush drawing events and callbacks (incl. user interrupts)
 
 % check for stop signal from the UI
 % TODO this is where we would check for Ctrl-C if MATLAB supported it...
-if self.opt.stop
+if self.config.stop
     self.opt.term_reason = 'User interrupt';
     stop = true;
+    self.stats{end+1} = self.opt; % make a copy of the current run's statistics
 end
 
 
@@ -20,7 +21,7 @@ end
 
 % Refresh the UI figure.
 temp = self.opt.options.plot_interval;
-if ~isempty(self.opt.ui_fig) && temp && mod(self.opt.N_iter, temp) == 0
+if ~isempty(self.config.ui_fig) && temp && mod(self.opt.N_iter, temp) == 0
     self.ui_refresh(false, optimValues.fval);
 end
 
@@ -46,7 +47,7 @@ if ct >= self.opt.options.max_cputime
 end
 
 if self.opt.last_grad_norm <= self.opt.options.min_gradient_norm
-    self.opt.term_reason = 'Minimal gradient norm reached';
+    self.opt.term_reason = 'Minimum gradient norm reached';
     stop = true;
 end
 
@@ -59,9 +60,8 @@ end
 
 %% Stats collector part
 
-self.stats.error(end+1) = optimValues.fval;
-self.stats.wall_time(end+1) = wt;
-self.stats.cpu_time(end+1)  = ct;
-self.stats.integral(end+1,:) = self.seq.integral();
-%self.stats.fluence(end+1)    = self.seq.fluence(self.system.M);
+self.opt.error(end+1) = optimValues.fval;
+self.opt.wall_time(end+1) = wt;
+self.opt.cpu_time(end+1)  = ct;
+self.opt.control_integral(end+1,:) = self.seq.integral();
 end

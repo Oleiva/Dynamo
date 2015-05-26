@@ -12,9 +12,10 @@ TODO list for Dynamo 2
          *  optimizing taus
       3. Tests
         (*) test_gradient
+         *  unit tests
+           *  the same unitary (closed) optimization problem should yield a similar solution in both "closed" and "open" modes
+           *  the same unitary sequence must return the same error in both "closed" and "open" modes
          *  script that runs all the demos (to make sure they still run!)
-         *  the same unitary (closed) optimization problem should yield a similar solution in both "closed" and "open" modes
-         *  the same unitary sequence must return the same error in both "closed" and "open" modes
 
 2. Minimal benchmarking framework
       1. Allow user to easily compare several algorithms for a given problem
@@ -73,7 +74,7 @@ TODO list for Dynamo 2
          (*) Replace s and sb with closed, open
           *  fix other bad/undescriptive names 
       3. Other features
-          *  fix the stats system so that an interrupted optimization run can be continued
+         (*)  fix the stats system so that an interrupted optimization run can be continued
           *  automatic top curve sweeping function
           *  plot axis labels should have physical units if possible (qsystem.TU)
 

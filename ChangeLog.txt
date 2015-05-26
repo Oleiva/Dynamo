@@ -1,0 +1,13 @@
+Changelog for DYNAMO - Quantum Dynamic Optimization Package
+
++ added
+- removed
+* changed
+b bugfix
+
+
+1.4.0       in progress
+              * dynamo: stats system can handle several optimization runs
+              + dynamo/shake: Randomly perturbs the control sequence, can be used to get out of local optima.
+              + dynamo/split: Refines the control sequence by splitting given bins into several.
+              + test: Unit tests for DYNAMO.

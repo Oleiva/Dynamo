@@ -5,14 +5,6 @@ function user_options = init_opt(self, control_mask, varargin)
 fprintf('Optimization space dimension: %d\n', sum(sum(control_mask)));
 
 
-%% statistics
-
-self.stats.error = self.compute_error();
-self.stats.wall_time = 0;
-self.stats.cpu_time  = 0;
-self.stats.integral  = self.seq.integral();
-
-
 %% options
 
 % MATLAB-style options processing.
@@ -30,15 +22,27 @@ defaults = struct(...
 [self.opt.options, user_options] = apply_options(defaults, user_options);
 
 
+%% statistics
+
+self.opt.error = self.compute_error();
+self.opt.wall_time = 0;
+self.opt.cpu_time  = 0;
+self.opt.control_integral  = self.seq.integral();
+
+
+%% other optimization data
+
 self.opt.initial_controls = self.seq.get();
 self.opt.control_mask = control_mask;
 self.opt.N_iter = 0;
 self.opt.N_eval = 0;
-self.opt.last_grad_norm = NaN;
 self.opt.term_reason = 'None yet';
-self.opt.stop = false;  % communication between the UI figure and monitor_func
 self.opt.wall_start = now();
 self.opt.cpu_start = cputime();
+self.opt.last_grad_norm = NaN;
+self.opt.max_violation = 0;  % track the worst gradient approximation violation
+
+self.config.stop = false;  % communication between the UI figure and monitor_func
 end
 
 
