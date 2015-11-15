@@ -99,15 +99,11 @@ Random ideas and things to test:
 - express a state transfer problem in a Hermitian basis => real
   vectors and matrices instead of complex ones, faster...
 
-- Ask Frank about noncommuting dP/du algorithms
-
 - consistent function interface: dim as first or second parameter?
 
 - Module for nth-degree gradient approximation with repeated scaling
   and squaring: Fouquieres et al., J. Magn. Reson. 212, 412 (2011).
   Automatic choice of \epsilon for finite-difference gradient method, ibid.
-
-- Augmented matrix exponential gradient module for open systems, Floether et al. (2012)
 
 - performance-compare error_full and the approximation given by error_real
 
@@ -133,3 +129,5 @@ Random ideas and things to test:
 - problems resulting from using an approximated gradient (incl. finite diff with bad epsilon): breaking symmetries in controls, bad convergence, fake "dynamic" local minima?
 
 - decide what to do with the 1st order gradients, they're awful. see @dynamo/gradient_test.m
+
+- combine similar gradient and error funcs if there is no perfomance loss, merge gradient_setup into gradient funcs themselves.
