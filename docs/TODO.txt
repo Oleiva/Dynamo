@@ -7,9 +7,10 @@ TODO list for Dynamo 2
 
 1. Sample/reference problem set, unit tests
      (1) Include all the reference problems from Dynamo 1.2
-      2. Additional demos (covering all the new features/tasks)
-         *  open systems, _partial tasks
-         *  optimizing taus
+     (2) Additional demos
+         (*)  all basic optimization tasks (open systems, _partial tasks...)
+         (*)  optimizing taus
+         (*)  ensemble optimization
       3. Tests
         (*) test_gradient
          *  unit tests
@@ -44,8 +45,8 @@ TODO list for Dynamo 2
            (*) Modify some variable names to be self-documenting
       2. At function headers so Matlab's "help" gives more meaningful results
       3. Wiki
-      4. Additional examples, see also 1.2
-      5. Add reference to github for those wishing to contribute
+      4. Update README.txt
+     (5) Add reference to github for those wishing to contribute
       6. dynamo_manual.tex
       7. Bibliography/references
 
@@ -88,7 +89,7 @@ Random ideas and things to test:
 - target = id with relaxation
 
 - S+E, S+E+B: Kosut's paper on non-markovian distance measures:
-  http://arxiv.org/pdf/quant-ph/0606064v1
+  http://arxiv.org/abs/quant-ph/0606064
 
 - When are the controls kind of self-limited? Only if we need to wait
   for H_drift (coupling) to complete the operation?
@@ -131,3 +132,5 @@ Random ideas and things to test:
 - decide what to do with the 1st order gradients, they're awful. see @dynamo/gradient_test.m
 
 - combine similar gradient and error funcs if there is no perfomance loss, merge gradient_setup into gradient funcs themselves.
+
+- open state overlap mode: warn if final state is not pure
