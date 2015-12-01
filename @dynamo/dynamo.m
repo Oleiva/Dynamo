@@ -8,7 +8,7 @@ classdef dynamo < matlab.mixin.Copyable
 % Governing equation: \dot(X)(t) = (A +\sum_k u_k(t) B_k) X(t) = G(t) X(t)
     
 % Shai Machnes   2010-2011
-% Ville Bergholm 2011-2014
+% Ville Bergholm 2011-2015
 
 
   properties
@@ -26,7 +26,7 @@ classdef dynamo < matlab.mixin.Copyable
   methods (Static)
     function ret = version()
     % Returns the current DYNAMO version.
-        ret = '1.4.0alpha3';
+        ret = '1.4.0alpha4';
     end
 
 
@@ -469,8 +469,54 @@ classdef dynamo < matlab.mixin.Copyable
         end
     end
 
+    function plot_pop(self, varargin)
+    % Plots the evolution of the populations under the current
+    % control sequence.
 
-    function plot_X(self, dt, k, ax, full_plot)
+        % what should we plot?
+        if self.system.liouville
+            plot_func = @prob_stateop;
+        else
+            plot_func = @prob_ket;
+        end
+
+        self.plot_X(plot_func, varargin{:});
+
+        % NOTE: due to the horrible scoping rules of MATLAB, we use small x
+        % in these functions as not to nuke the capital X in the parent function.
+
+        function p = prob_stateop(x)
+        % Returns the diagonal of a vectorized state operator.
+            x = partial_trace(inv_vec(x), self.system.dimSE, 2);
+            p = real(diag(x));
+        end
+
+        function p = prob_ket(x)
+        % Returns the absolute values squared of ket vector elements.
+            p = real(x .* conj(x));
+        end
+    end
+
+    function plot_eig(self, varargin)
+
+        % what should we plot?
+        if self.system.liouville
+            plot_func = @eig_stateop;
+        else
+            error('System closed, eigenvalues are constant.')
+        end
+
+        self.plot_X(plot_func, varargin{:});
+
+        function p = eig_stateop(x)
+        % Returns the real, nonnegative eigenvalues of the state operator.
+            x = partial_trace(inv_vec(x), self.system.dimSE, 2);
+            x = 0.5 * (x + x'); % eliminate numerical errors
+            p = eig(x);
+        end
+    end
+
+    function plot_X(self, plot_func, dt, k, ax, full_plot)
     % Plots the evolution of the initial system as a function of
     % time under the current control sequence.
     % dt, if given, is the timestep.
@@ -478,13 +524,13 @@ classdef dynamo < matlab.mixin.Copyable
     % ax are the set of axes the plot goes into.
     % TODO for now it only handles kets and state ops
 
-        if nargin < 5
+        if nargin < 6
             full_plot = true;
-        if nargin < 4
+        if nargin < 5
             ax = gca();
-        if nargin < 3
+        if nargin < 4
             k = 1; % TODO should match the choice in X()
-        if nargin < 2
+        if nargin < 3
             dt = []; % one plot point per bin
         end
         end
@@ -509,25 +555,17 @@ classdef dynamo < matlab.mixin.Copyable
             %cla(ax);
         end
 
-        % what should we plot?
-        if self.system.liouville
-            state_probs = @prob_stateop;
-            %state_probs = @eig_stateop; % FIXME
-        else
-            state_probs = @prob_ket;
-        end
-
         if isempty(dt)
             % one plot point per timeslot
             for j = 0:n_timeslots
-                res(j+1, :) = state_probs(self.X(j, k));
+                res(j+1, :) = plot_func(self.X(j, k));
             end
             t = [0; cumsum(self.seq.tau)];
         else
             % use the given dt for plotting
             t = [0];
             X = self.X(0, k);
-            res(1, :) = state_probs(X);
+            res(1, :) = plot_func(X);
 
             for j = 1:n_timeslots
                 X_end = self.X(j, k); % make sure the cache is up-to-date
@@ -539,7 +577,7 @@ classdef dynamo < matlab.mixin.Copyable
                 P = expm(step * G);
                 for q = 1:n_steps
                     X = P * X;
-                    res(end+1, :) = state_probs(X);
+                    res(end+1, :) = plot_func(X);
                 end
                 temp = t(end);
                 t = [t, linspace(temp+step, temp+tau, n_steps)];
@@ -549,27 +587,6 @@ classdef dynamo < matlab.mixin.Copyable
         plot(ax, t, res);
         axis(ax, [0, t(end), 0, 1]);
         legend(self.system.state_labels, 'interpreter', 'latex');
-
-        % NOTE: due to the horrible scoping rules of MATLAB, we use small x
-        % in these functions as not to nuke the capital X in the parent function.
-
-        function p = prob_stateop(x)
-        % Returns the diagonal of a vectorized state operator.
-            x = partial_trace(inv_vec(x), self.system.dimSE, 2);
-            p = real(diag(x));
-        end
-     
-        function p = prob_ket(x)
-        % Returns the absolute values squared of ket vector elements.
-            p = real(x .* conj(x));
-        end
-
-        function p = eig_stateop(x)
-        % Returns the real, nonnegative eigenvalues of the state operator.
-            x = partial_trace(inv_vec(x), self.system.dimSE, 2);
-            x = 0.5 * (x + x'); % eliminate numerical errors
-            p = eig(x);
-        end
     end
 
     function shake(self, rel_change)
