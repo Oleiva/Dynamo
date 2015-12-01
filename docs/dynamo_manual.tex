@@ -22,11 +22,14 @@
 
 \newcommand{\hilb}[1]{\mathcal{#1}}
 
+\DeclareMathOperator{\End}{End} % endomorphisms
 \DeclareMathOperator{\Ad}{Ad}
 \DeclareMathOperator{\ad}{ad}
 \DeclareMathOperator{\tr}{tr}
 \DeclareMathOperator{\re}{Re}
 \DeclareMathOperator{\cvec}{vec}
+\newcommand{\vecop}[1]{\widehat{#1}}
+\newcommand{\spr}{\Upsilon}
 
 \newcommand{\dd}[2]{\frac{\partial #1}{\partial #2}}
 \newcommand{\wrt}[1]{\:\mathrm{d}#1\:} % (integral) with respect to
@@ -34,7 +37,6 @@
 % TODO Dynamo vs DYNAMO
 \newcommand{\DYNAMO}{\textsc{dynamo}}
 
-% TODO final vs target, maybe X_n should be X_final
 \begin{document}
 \title{DYNAMO manual}
 \date{\today}
@@ -82,11 +84,20 @@ and $G$~the total generator.
 % NOTE We used to have a minus sign in front of~$G$ as a convention, not any more.
 Depending on the problem,
 $X$~can be related to either an abstract
-vector space, a quantum mechanical Hilbert state space,
+inner product space, a quantum mechanical Hilbert state space,
 or a Liouville space.
 We use the $\cvec$-representation of state
 operators, explained in Appendix~\ref{sec:vec},
 as the mapping between the Hilbert and Liouville spaces.
+
+The master equation can be solved using the propagator ansatz
+$X(t) = P(t, t_0) X(t_0)$, with $P(t,t) = \I$, for any initial state~$X(t_0)$,
+with the propagator $P(t,t_0)$ following the corresponding operator equation
+\be
+\label{eq:prop}
+\dot{P}(t, t_0) = G(t) P(t, t_0).
+\ee
+
 
 The optimization problems can be divided into three categories:
 \begin{itemize}
@@ -113,7 +124,7 @@ but in the end we are only interested in the state of~$S$.
 Assume that the controls are
 piecewise constant\footnote{Actually ``piecewise defined'' might be
   enough, if the controls are not constant it's just the computation
-  of the propagators~$P_k$ for each slice that gets harder.}
+  of the propagators~$P_k$ for each slice, and the corresponding derivatives, that gets harder.}
 in time: $u_{c, k}$, with $n$~time slices in total,
 and that the duration of the $k$th slice is~$\tau_k$.
 The points in time where the controls may change in value are thus
@@ -127,13 +138,13 @@ $
 with
 \be
 \label{eq:Xn}
-X_k := X(t_k) = \prod_{j=1}^{k} P_j X(t_0).
+X(t_k) = \prod_{j=1}^{k} P_j X(t_0).
 \ee
 The propagators, like the generators, always act on~$X$ by multiplication
 from the left.
 Furthermore, let us define the system and adjoint system propagators:
 \begin{align}
-U_k &:= P_k \cdots P_1,\\      % U_k X_0 = X_k
+\spr_k &:= P_k \cdots P_1,\\      % \spr_k X_0 = X_k
 \Lambda_k &:= P_n \cdots P_{k+1}.
 \end{align}
 The relationship between the time slots and the related operators is
@@ -151,16 +162,16 @@ illustrated in Table~\ref{table:slices}.
 % $u_{c,1}$ & $u_{c,2}$ & & $u_{c,k}$ & $u_{c,k+1}$ & & $u_{c,n-1}$ & $u_{c,n}$ \\
  $P_1$ & $P_2$ & $\cdots$ & $P_k$ & $P_{k+1}$ & $\cdots$ & $P_{n-1}$ & $P_n$ \\
 \cline{1-4}
-& & & $U_{k}$ & $\Lambda_{k}$ & & & \\
+& & & $\spr_{k}$ & $\Lambda_{k}$ & & & \\
 \cline{5-8}
 \end{array}
 \end{array}
 \]
 \caption{Time slices and operators related to them.
 $t_k = t_0 + \sum_{j=1}^{k} \tau_j$.
-The total forward and backward
+The total system and adjoint system
 propagators to the point $t_k$ are defined as
-$U_k = P_k \cdots P_1$ and
+$\spr_k = P_k \cdots P_1$ and
 $\Lambda_k = P_{n} \cdots P_{k+1}$.
 \label{table:slices}
 }
@@ -176,6 +187,7 @@ term~\cite{Najfeld1995,deFouquieres2011}.
 Here we drop the slice index~$k$ since it is evident from the context.
 \begin{align}
 \dd{P}{\tau}  &= G P = P G,\\
+\label{eq:dPdu_series}
 \dd{P}{u_{c}}
 &=
 \sum_{p=1}^{\infty} \frac{\tau^p}{p!}
@@ -198,7 +210,7 @@ Using the beta function integral
 and exchanging the relative order of the integration and the summations,
 we obtain
 \begin{align}
-\label{eq:dPdu}
+\label{eq:dPdu_int}
 \dd{P}{u_{c}}
 &=
 \int_0^1 \wrt{x}
@@ -226,8 +238,13 @@ we obtain
 &=
 P
 \int_0^1 \wrt{x}
-e^{-x \ad_{\tau G}}
-(\tau B_c).
+e^{-x \tau \ad_{G}}
+(\tau B_c)
+=
+\int_0^1 \wrt{x}
+e^{x \tau \ad_{G}}
+(\tau B_c)
+\quad P.
 \end{align}
 The integral 
 $\int_0^1 \wrt{x} e^{x Z}$
@@ -235,14 +252,19 @@ evaluates to the power series
 $\sum_{k=0}^\infty \frac{Z^k}{(k+1)!}$,
 which finally yields the commutator series
 \be
+\label{eq:dPdu_commseries}
 \dd{P}{u_{c}}
 = P \left(\tau B_c -\frac{\tau^2}{2!}\comm{G}{B_c}
 +\frac{\tau^3}{3!}\comm{G}{\comm{G}{B_c}}
-+\ldots \right).
++\ldots \right)
+= \left(\tau B_c +\frac{\tau^2}{2!}\comm{G}{B_c}
++\frac{\tau^3}{3!}\comm{G}{\comm{G}{B_c}}
++\ldots \right) P.
 \ee
-If $\tau |G| \ll 1$, we may approximate the partial derivative by $\tau P B_c$.
-The approximation is exact if $\comm{G}{B_c} = 0$.
-Otherwise we may compute the integral in Eq.~\eqref{eq:dPdu}
+
+\subsubsection{General case}
+
+We may compute the integral in Eq.~\eqref{eq:dPdu_int}
 using the auxiliary matrix technique
 \begin{align}
 \exp \left(
@@ -271,21 +293,32 @@ P & \dd{P}{u_c}\\
 0 & P
 \end{pmatrix}.
 \end{align}
+The downside is that computing the matrix expontential is expensive and slow.
 
+\subsubsection{Truncated series}
 
+If $\|\tau G\| \ll 1$, we may approximate the partial derivative by
+$\tau P B_c$ (or equivalently by $\tau B_c P$).
+This first-order approximation is exact if $\comm{G}{B_c} = 0$.
+It is also possible to use a higher-order approximation by including
+more terms from the series in Eq.~\eqref{eq:dPdu_commseries}.
+The downside is that we must keep track of~$\|G\|$ and adjust the
+slice duration~$\tau$ accordingly.
 
+\subsubsection{Normal generators}
+\label{sec:dPdu_normal}
 
-In the special case where $G$~is normal, we may use the spectral decomposition
-$G = \sum_m \lambda_m \ket{\lambda_m} \bra{\lambda_m}$,
-which yields
+In the special case where $G$~is normal, we may insert the spectral decomposition
+$G = \sum_m \lambda_m \ket{\lambda_m} \bra{\lambda_m}$
+into Eq.~\eqref{eq:dPdu_series}, which yields
 \begin{align}
 \bra{\lambda_a} \dd{P}{u_{c}} \ket{\lambda_b}
 &=
-\bra{\lambda_a} \sum_{j=1}^{\infty} \frac{\tau^j}{j!} \sum_{q=0}^{j-1}
-G^{q} B_c G^{j-q-1} \ket{\lambda_b}
+\bra{\lambda_a} \sum_{p=1}^{\infty} \frac{\tau^p}{p!} \sum_{q=0}^{p-1}
+G^{q} B_c G^{p-q-1} \ket{\lambda_b}
 =
-\sum_{j=1}^{\infty} \frac{\tau^j}{j!} \sum_{q=0}^{j-1}
-\lambda_a^{q} \lambda_b^{j-q-1} \bra{\lambda_a} B_c \ket{\lambda_b}.
+\sum_{p=1}^{\infty} \frac{\tau^p}{p!} \sum_{q=0}^{p-1}
+\lambda_a^{q} \lambda_b^{p-q-1} \bra{\lambda_a} B_c \ket{\lambda_b}.
 \end{align}
 If $\lambda_a = \lambda_b$, we obtain
 \begin{align}
@@ -299,118 +332,125 @@ and we get
 \notag
 \bra{\lambda_a} \dd{P}{u_{c}} \ket{\lambda_b}
 &=
-\sum_{j=1}^{\infty} \frac{\tau^j}{j!} \lambda_b^{j-1}
-\sum_{q=0}^{j-1} \left(\frac{\lambda_a}{\lambda_b}\right)^{q}  \bra{\lambda_a} B_c \ket{\lambda_b}
+\sum_{p=1}^{\infty} \frac{\tau^p}{p!} \lambda_b^{p-1}
+\sum_{q=0}^{p-1} \left(\frac{\lambda_a}{\lambda_b}\right)^{q}  \bra{\lambda_a} B_c \ket{\lambda_b}
 =
-\sum_{j=1}^{\infty} \frac{\tau^j}{j!} \lambda_b^{j-1}
-\frac{(\lambda_a/\lambda_b)^j -1}{(\lambda_a/\lambda_b) -1}  \bra{\lambda_a} B_c \ket{\lambda_b}\\
+\sum_{p=1}^{\infty} \frac{\tau^p}{p!} \lambda_b^{p-1}
+\frac{(\lambda_a/\lambda_b)^p -1}{(\lambda_a/\lambda_b) -1}  \bra{\lambda_a} B_c \ket{\lambda_b}\\
 &=
-\sum_{j=1}^{\infty} \frac{\tau^j}{j!} 
-\frac{\lambda_a^j -\lambda_b^j}{\lambda_a -\lambda_b}  \bra{\lambda_a} B_c \ket{\lambda_b}
+\sum_{p=1}^{\infty} \frac{\tau^p}{p!}
+\frac{\lambda_a^p -\lambda_b^p}{\lambda_a -\lambda_b}  \bra{\lambda_a} B_c \ket{\lambda_b}
 =
 \frac{\exp(\tau \lambda_a) -\exp(\tau \lambda_b)}{\lambda_a -\lambda_b}  \bra{\lambda_a} B_c \ket{\lambda_b}.
 \end{align}
 
 
 
-
-
-
-
-
-
-
-\section{Optimization}
-
-In what follows, all quantum states are assumed to be normalized to
-unity. $\dim \hilb{H}$~is the dimension of the Hilbert space~$\hilb{H}$ of the system.
-The results of this section are summarized in Table~\ref{table:tasks}.
+\section{Optimization tasks}
 
 Within each type of system we have several possible optimization tasks.
-We usually wish to minimize an operator/vector distance between an
+We usually wish to minimize an operator/vector distance~$d(A,B)$ between an
 initial state $X_i$ propagated in time to~$t_n$ under a control sequence,
 denoted~$B~=~\left(\prod_{j=1}^{n} P_j\right) X_i$,
-and a final state~$A = X_f$.
-The distance is measured using the Frobenius norm, induced by the Hilbert-Schmidt inner product explained in Appendix~\ref{sec:hs}:
+and a final (target) state~$A = X_f$.
+For computational simplicity, the distance is measured using the Frobenius
+norm, induced by the Hilbert-Schmidt inner product explained in
+Appendix~\ref{sec:hs}:
 \be
-d^2(A, B) = |A-B|^2
+d^2(A, B) = \|A-B\|^2
 = \inprod{A-B}{A-B}
 %=\tr((A-B)^\dagger (A-B))
-%= |A|^2 +|B|^2 -\tr(A^\dagger B) -\tr(B^\dagger A)
-%= |A|^2 +|B|^2 -2 \re \tr(A^\dagger B).
-= |A|^2 +|B|^2 -2 \re \inprod{A}{B}.
+%= \|A\|^2 +\|B\|^2 -\tr(A^\dagger B) -\tr(B^\dagger A)
+%= \|A\|^2 +\|B\|^2 -2 \re \tr(A^\dagger B).
+= \|A\|^2 +\|B\|^2 -2 \re \inprod{A}{B}.
 \ee
-Dividing this expression with twice the target norm squared~$|A|^2$ (assumed fixed,
+Dividing this expression with twice the target norm squared~$\|A\|^2$ (assumed fixed,
 known), we obtain the normalized distance measure
 \be
 \label{eq:df}
 D(A,B)
-:= \frac{d^2(A, B)}{2|A|^2}
-= \frac{1}{2}\left(1 +\frac{|B|^2}{|A|^2}\right) -f(A, B).
+:= \frac{d^2(A, B)}{2\|A\|^2}
+= \frac{1}{2}\left(1 +\frac{\|B\|^2}{\|A\|^2}\right) -f(A, B).
 \ee
 The factor of two is a convenient scale factor, and
 \be
 f(A, B)
-:= \frac{1}{|A|^2} \re \inprod{A}{B}
-= \frac{1}{|A|^2} \re \tr(A^\dagger B)
+:= \frac{1}{\|A\|^2} \re \inprod{A}{B}
+= \frac{1}{\|A\|^2} \re \tr(A^\dagger B)
 \ee
 is the normalized \emph{fidelity}\footnote{
 There is another widely used quantity called fidelity in quantum information science which is different from the present one.}.
 If $A$ and $B$ are Hermitian, $\re$ is unnecessary and the fidelity corresponds to an inner product.
-If $|A|$ and $|B|$ are constant, we can see from Eq.~\eqref{eq:df} that
+If $\|B\|$ is constant (does not depend on the control sequence), we can see from Eq.~\eqref{eq:df} that
 the minimum distance corresponds to maximum fidelity.
 
 % NOTE fidelity is the real part of an inner product, one can use Cauchy-Schwarz inequality...
-Clearly $f(A, A) = 1$, and
-the triangle inequality $|A-B| \le |A|+|B|$ yields
+Clearly $f(A, A) = 1$.
+The triangle inequality $\|A-B\| \le \|A\|+\|B\|$ yields
 \be
-\left(1 -\frac{|B|}{|A|} \right)^2 \le 2D(A, B) \le \left(1 +\frac{|B|}{|A|} \right)^2
-\qquad \text{and} \qquad
-|f(A, B)|
-\le \frac{|B|}{|A|}
-%\le \frac{1}{2} \left(1 +\frac{|B|^2}{|A|^2} \right)
+\left(1 -\frac{\|B\|}{\|A\|} \right)^2 \le 2D(A, B) \le \left(1 +\frac{\|B\|}{\|A\|} \right)^2,
 \ee
-since $f(A, -B) = -f(A, B)$.
+and the Cauchy-Schwarz inequality $|\inprod{A}{B}| \le \|A\|\|B\|$
+yields
+$|f(A, B)|
+\le \frac{\|B\|}{\|A\|}$.
+%\le \frac{1}{2} \left(1 +\frac{\|B\|^2}{\|A\|^2} \right)
 
 
+We will now derive error functions for various optimization tasks
+based on the distance measure defined above.
+In what follows, all quantum states are assumed to be normalized to
+unity. $\dim \hilb{H}$~is the dimension of the Hilbert space~$\hilb{H}$ of the system.
+The results of this section are summarized in Table~\ref{table:tasks}.
 
 
 
 \begin{table}
-\begin{tabular}{ll|c|c|l|l|l|l}
-& & task & space & $X_i$ & $X_f$ & $|X|^2$ & error function\\
+\begin{tabular}{ll|c|c|l|l|l|l|l}
+& & task & space & $X_i$ & $X_f$ & $\|X\|^2$ & propagation & error function\\
 \hline
 Abstract &
 & $\ket{v_i} \to \ket{v_f}$ & V
-& $\ket{v_i}$ &$\ket{v_f}$ & $\braket{v}{v}$ & $E_\text{full}$\\
-& & $U_i \to U_f$ & V
-& $U_i$ & $U_f$ & $\tr(U^\dagger U)$ & $E_\text{full}$\\
+& $\ket{v_i}$ &$\ket{v_f}$ & $\braket{v}{v}$ &
+\eqref{eq:master} & $E_\text{full}$\\
+& & $W_i \to W_f$ & V
+& $W_i$ & $W_f$ & $\tr(W^\dagger W)$ &
+\eqref{eq:master} & $E_\text{full}$\\
 \hline
 Closed system & S
 & $\ket{\psi_i} \to \ket{\psi_f}$ & H
-& $\ket{\psi_i}$ & $\ket{\psi_f}$ & 1 & $E_\text{abs}$ (with phase: $E_\text{real}$)\\
+& $\ket{\psi_i}$ & $\ket{\psi_f}$ & 1 &
+\eqref{eq:master} & $E_\text{abs}$ (with phase: $E_\text{real}$)\\
 %& $\rho_i \to \rho_f$ & L & $\cvec(\rho)$ & $P(\rho)$ & $E_\text{real}$\\
 & & $\rho_i \to \rho_f$ & H
-& $\rho_i$ & $\rho_f$ & $P(\rho)$ & $E_\text{real} + C$\\
+& $\rho_i$ & $\rho_f$ & $P(\rho)$ &
+\eqref{eq:vonneumann} & $E_\text{real} + C$\\
 %& $\rho_i \to \ketbra{\psi_f}{\psi_f}$ & H & $\rho$ & $P(\rho)$ & $E_\text{real}$ (overlap)\\
 & & $U_i \to U_f$ & H
-& $U_i$ & $U_f$ & $\dim \hilb{H}$ & $E_\text{abs}$ (with phase: $E_\text{real}$)\\
+& $U_i$ & $U_f$ & $d_S$ &
+\eqref{eq:master} & $E_\text{abs}$ (with phase: $E_\text{real}$)\\
 \hline
 Closed system & SE
 & $\rho_i \to \rho_f$ & H
-& $\rho_i \otimes \rho_E$ & $\rho_f$ & $P(\rho)$ & $E_\text{partial}$\\
+& $\rho_i \otimes \rho_E$ & $\rho_f$ & $P(\rho)$ &
+\eqref{eq:vonneumann} & $E_\text{partial}$\\
 & & $U_i \to U_f$ & H
-& $U_i \otimes \I_E$ & $U_f \otimes \I_E$ & $\dim \hilb{H}_S \dim \hilb{H}_E$ & $E_\text{abs}$\\
+& $U_i \otimes \I_E$ & $U_f \otimes \I_E$ & $d_S d_E$ &
+\eqref{eq:master} & $E_\text{abs}$\\
 \hline
 Open system & S
-& $\rho_i \to \rho_f$ & L & $\cvec(\rho_i)$ & $\cvec(\rho_f)$ & $P(\rho)$ & $E_\text{full}$\\
+& $\rho_i \to \rho_f$ & L & $\cvec(\rho_i)$ & $\cvec(\rho_f)$ & $P(\rho)$ &
+\eqref{eq:master} & $E_\text{full}$\\
 & & $\rho_i \to \ketbra{\psi_f}{\psi_f}$ & L
-& $\cvec(\rho_i)$ & $\cvec(\rho_f)$ & $P(\rho)$ & $E_\text{real}$ (overlap)\\
-& & $F_i \to F_f$ & L & $F_i$ & $F_f$ & $|\tr(F^\dagger F)|^2$ & $E_\text{full}$\\
+& $\cvec(\rho_i)$ & $\cvec(\ketbra{\psi_f}{\psi_f})$ & $P(\rho)$ &
+\eqref{eq:master} & $E_\text{real}$ (overlap)\\
+& & $F_i \to F_f$ & L & $F_i$ & $F_f$ & $\tr(F^\dagger F)$ &
+\eqref{eq:master} & $E_\text{full}$\\
 \hline
 Open system & SE
 & $\rho_i \to \rho_f$ & L
-& $\cvec(\rho_i \otimes \rho_E)$ & $\rho_f$ & $P(\rho)$ & $E_\text{partial}$\\
+& $\cvec(\rho_i \otimes \rho_E)$ & $\rho_f$ & $P(\rho)$ &
+\eqref{eq:master} & $E_\text{partial}$\\
 & & $U_i \to U_f$ & L & TODO
 \end{tabular}
 \caption{Summary of the optimization tasks.
@@ -419,12 +459,47 @@ Open system & SE
 \end{table}
 
 
+\subsection{Abstract linear system}
+
+In the most abstract case we work in an inner product space~$\hilb{V}$.
+The generator~$G(t)$ is not necessarily normal, so
+the propagator gradient may \emph{not} be computed using the exact
+method in Sec.~\ref{sec:dPdu_normal}.
+The evolution is not guaranteed to conserve the norm, which is why we must
+use the full error function~$D(A,B)$ instead of just the fidelity.
+
+
+\subsubsection{Vector transfer $\ket{v_i} \to \ket{v_f}$}
+
+In this case $X = \ket{v} \in \hilb{V}$, a vector, with
+$\|X\|^2 = \braket{v}{v}$.
+The error function is simply the full error
+\be
+E = D(A, B) = E_\text{full}(A, B).
+\ee
+
+\subsubsection{Full propagator $W_i \to W_f$}
+
+In this task
+$X \in \End(\hilb{V})$
+is an operator on~$\hilb{V}$, and
+we wish to generate a propagator~$W_f$
+starting from the initial propagator~$W_i$ (usually~$\I$).
+$\|X\|^2 = \tr(X^\dagger X)$ which is not necessarily constant.
+The error function is again
+\be
+E = D(A, B) = E_\text{full}(A, B).
+\ee
+
+
 \subsection{Closed system}
 
 In a closed system, we work within the Hilbert space~$\hilb{H}$.
 The generators~$G_k$ are antihermitian (Hamiltonians multiplied by~$-\frac{i}{\hbar}$)
 and the propagators~$P_k$ are thus always
-unitary. Consequently, the purity of a state is conserved.
+unitary. Consequently, both the norm and the purity of a state is conserved,
+and we may use the exact spectral decomposition method in
+Sec.~\ref{sec:dPdu_normal} to compute the propagator gradient.
 
 As a variant of this setting,
 we may have a system~$S$ coherently coupled to an
@@ -438,8 +513,8 @@ If one sets $\dim \hilb{H}_E = 1$, all the expressions should coincide with the 
 \label{sec:closed-pure}
 
 %Maximize state overlap, essentially
-$X = \ket{\psi} \in \hilb{H}$, a Hilbert space state vector.
-The states are assumed normalized, such that $|X|^2 = \braket{\psi}{\psi} = 1$.
+In this case $X = \ket{\psi} \in \hilb{H}$, a Hilbert space state vector.
+The states are assumed normalized, such that $\|X\|^2 = \braket{\psi}{\psi} = 1$.
 Since global phase has no physical significance, our error function is
 \be
 E = \min_{\phi \in \R} D(A, e^{i \phi} B)
@@ -456,7 +531,7 @@ The fidelity diagram breaks into two pieces and
 we obtain
 \be
 f(A, B)
-= (\re) \left|(\tr) \bra{\psi_f}  P_n \cdots P_1 \ket{\psi_i} \right|^2.
+= (\re) \left|(\tr)(A^\dagger  B) \right|^2.
 \ee
 with $0 \le f(A, B) \le 1$.
 Thus the problem simplifies back into Hilbert space
@@ -485,45 +560,42 @@ This approach is fairly inefficient though, since in a closed system the
 propagators are always unitary and the full Liouville space is not
 needed. Hence we make an exception here, and \emph{do not} follow Eq.~\eqref{eq:master}.
 Instead, we define~$Y = \rho$, and remain within the Hilbert space.
-This choice gives $|Y|^2 = \tr(\rho^2) = P(\rho)$, the purity of~$\rho$.
+This choice gives $\|Y\|^2 = \tr(\rho^2) = P(\rho)$, the purity of~$\rho$.
 Eq.~\eqref{eq:master} is replaced by the von Neumann equation
 \be
+\label{eq:vonneumann}
 \dot{Y} = \comm{G(t)}{Y(t)},
 \ee
 and instead of Eq.~\eqref{eq:Xn} we have
 \be
-Y_k = P_k \cdots P_1 Y_i P_1^\dagger \cdots P_k^\dagger.
+Y(t_k) = P_k \cdots P_1 Y_i P_1^\dagger \cdots P_k^\dagger.
 \ee
 The error function is
 \be
 E
 = D(A, B)
-= \frac{1}{2}\left(1 +\frac{|B|^2}{|A|^2}\right) -\frac{1}{|A|^2} \re \tr(A^\dagger B).
-%= E_\text{real}(A, B) +\frac{1}{2}\left(\frac{|B|^2}{|A|^2} -1\right).
+= \frac{1}{2}\left(1 +\frac{\|B\|^2}{\|A\|^2}\right) -\frac{1}{\|A\|^2} \re \tr(A^\dagger B).
+%= E_\text{real}(A, B) +\frac{1}{2}\left(\frac{\|B\|^2}{\|A\|^2} -1\right).
 \ee
 Since under unitary propagation purity is preserved we have
-$|B| = |Y_i|$, a constant, and thus the error function is just $E_\text{real}$ with
-$f_{\text{max}} = \frac{1}{2}\left(1 +\frac{|B|^2}{|A|^2}\right)$.
+$\|B\| = \|Y_i\|$, a constant, and thus the error function is just $E_\text{real}$ with
+$f_{\text{max}} = \frac{1}{2}\left(1 +\frac{\|B\|^2}{\|A\|^2}\right)$.
 
 \begin{comment}
-%\footnote{It will of course turn out that this is equivalent to treating them as operators in Hilbert
-%space, $X~=~\rho$ as far as the results are concerned.}
-The goal here is to minimize state operator distance
-$D(A, B) = D(\rho_f, \rho_n)$.
-$|X|^2$~is equivalent to the purity of the state:
+Another option would be to use the $\cvec$-representation $X = \cvec(\rho)$.
+$\|X\|^2$~is equivalent to the purity of the state:
 \be
-|X|^2
-= |\cvec(\rho)|^2
-= |\rho|^2
+\|X\|^2
+= \|\cvec(\rho)\|^2
+= \|\rho\|^2
 = \tr(\rho^2)
 = P(\rho).
 \ee
-Unitary propagation conserves purity, hence (X1) holds, and we can
+Unitary propagation conserves purity, hence $\|B\|$~is constant and we may
 simply maximize the fidelity
 \be
 f(A, B)
-%= \frac{1}{P(\rho_f)} (\re) \tr(A^\dagger B)
-= \frac{1}{P(\rho_f)} (\re) (\tr) \left( A^\dagger  P_n \cdots P_1 X_i \right).
+= \frac{1}{\|A\|} (\re) \tr(A^\dagger B)
 \ee
 Furthermore, the fidelity is strictly nonnegative since the
 state operators are positive:
@@ -532,13 +604,13 @@ state operators are positive:
 \ee
 If either $\rho_f$ or $\rho_i$ is pure,
 $\rho = \ketbra{\psi}{\psi}$,
-we have $|\rho|^2 = \braket{\psi}{\psi}^2 = 1$, and
+we have $\|\rho\|^2 = \braket{\psi}{\psi}^2 = 1$, and
 the diagram simplifies by splitting up.
 \end{comment}
 
 In some cases we are only interested in maximizing the projection of
 the state on a target pure state~$A = \ketbra{\psi_f}{\psi_f}$,
-with $|A| = 1$. In this case the natural error function is
+with $\|A\| = 1$. In this case the natural error function is
 \be
 E
 = 1 -\bra{\psi_f} B \ket{\psi_f}
@@ -546,7 +618,8 @@ E
 = 1 -\re \tr\left(A^\dagger B\right)
 = E_\text{real}(A, B) \le 1,
 \ee
-yielding the same result.
+identical to the previous error function when $Y_i$~is pure.
+FIXME is there any reason to use the overlap error?
 
 
 \subsubsection{Unitary propagator $\I \to U_f$}
@@ -554,35 +627,35 @@ yielding the same result.
 In this task we wish to generate a unitary gate~$U_f$ up to global
 phase, starting from the initial gate~$U_i$.
 $X$~is a unitary operator on~$\hilb{H}$, and
-thus $|X|^2 = \tr(X^\dagger X) = \tr(\I) = \dim \hilb{H}$.
+thus $\|X\|^2 = \tr(X^\dagger X) = \tr(\I) = \dim \hilb{H}$.
 Since global phase does not matter, the error function is
 \be
 E
 = \min_{\phi \in \R} D(A, e^{i \phi} B)
-= 1 -\max_{\phi \in \R} \frac{1}{|A|^2} \re \left( e^{i \phi} \tr(A^\dagger B)\right)
-= 1 -\frac{1}{|A|^2}|\tr(A^\dagger B)|
+= 1 -\max_{\phi \in \R} \frac{1}{\|A\|^2} \re \left( e^{i \phi} \tr(A^\dagger B)\right)
+= 1 -\frac{1}{\|A\|^2}|\tr(A^\dagger B)|
 = E_\text{abs}(A, B) \le 1.
 \ee
 \begin{comment}
 We can also get rid of phase by explicitly lifting the problem into
 Liouville space (see Eq.~\eqref{eq:L-unitary}),
-$X = \hat{V} = V^* \otimes V$,
+$X = \vecop{V} = V^* \otimes V$,
 and then minimize the operator distance~$D(A, B)$.
-
 Using Eq.~\eqref{eq:hat-product}, the norm squared is 
 \be
-|X|^2 = |\hat{V}|^2
-= \tr(\hat{V}^\dagger \hat{V})
+\|X\|^2 = \|\vecop{V}\|^2
+= \tr(\vecop{V}^\dagger \vecop{V})
 = |\tr(V^\dagger V)|^2
 = |\tr(\I)|^2
-= N^2.
+= (\dim \hilb{H})^2
+= \|V\|^4.
 \ee
-This is constant, so (X1) holds and we may maximize the fidelity instead:
+This is constant, so we may maximize the fidelity instead:
 \be
 f(A, B)
-= \frac{1}{N^2} \re \tr \left(A^\dagger B \right)
+= \frac{1}{\|A\|^2} \re \tr \left(A^\dagger B \right)
 %= \frac{1}{N^2} (\re) \left| \tr \left(V_f^\dagger V_n \right) \right|^2
-= \frac{1}{N^2} (\re) \left| \tr \left(V_f^\dagger V_n \right) \right|^2.
+= \frac{1}{\|V_f\|^4} \left| \tr \left(V_f^\dagger V_n \right) \right|^2.
 \ee
 It clearly obeys $0 \le f(A, B) \le 1$.
 Much like in
@@ -592,13 +665,13 @@ choose~$X = V$.
 \end{comment}
 
 Typically $U_i = \I$.
-Even when it is not unity, because of the cyclical invariance of the trace $U_i$~can be always combined into~$U_f$.
+Even when it is not unity, because of the cyclical invariance of the trace, $U_i$~can be always combined into~$U_f$.
 If global phase matters (NOTE: unphysical), we may again directly minimize
 $D(A, B)$:
 \be
 E
 = D(A, B)
-= 1 -\frac{1}{|A|^2} \re \tr(A^\dagger B)
+= 1 -\frac{1}{\|A\|^2} \re \tr(A^\dagger B)
 = E_\text{real}(A, B) \le 2.
 \ee
 
@@ -613,35 +686,39 @@ $Y$ is a state operator on~$\hilb{H}_{SE}$, and
 the initial state is assumed to be of the
 form~$Y_i = \rho_i \otimes \rho_E$.
 We also define~$Y_f = \rho_f$.
-Again, $|Y|^2 = P(\rho)$.
+Again, $\|Y\|^2 = P(\rho)$.
+Purity of the full $SE$~state~$B$ is conserved under evolution,
+but the purity of the reduced state $\tr_E(B)$ on~$S$ is not.
 Like in Sec.~\ref{sec:closed-mixed},
 the propagation happens using the von Neumann equation.
 \be
 E
 = D(A, \tr_E(B))
-%= \frac{1}{2}\left(1 +\frac{|\tr_E(B)|^2}{|A|^2)}\right) -\frac{1}{|A|^2} \re \tr(A^\dagger \tr_E(B))
+%= \frac{1}{2}\left(1 +\frac{|\tr_E(B)|^2}{\|A\|^2)}\right) -\frac{1}{\|A\|^2} \re \tr(A^\dagger \tr_E(B))
 = E_\text{full}(A, \tr_E(B))
 = E_\text{partial}(A, B).
 \ee
 
 
 \subsubsection{Partial unitary propagator $\I \to U_f$}
+\label{sec:partU}
 
 We wish to generate a unitary gate~$U_f$ operating on $S$ up to global
 phase, starting from the identity.
 $X$ is a unitary operator on~$\hilb{H}_{SE}$, and
-thus $|X|^2 = \dim \hilb{H}_S \dim \hilb{H}_E$.
+thus $\|X\|^2 = \dim \hilb{H}_S \dim \hilb{H}_E$.
 Define $X_i = U_i \otimes U_E$, with $U_E$ unspecified at this point,
-and $X_f = U_f \otimes \I_E$.
+and $X_f = U_f \otimes \Phi$, with $\Phi$ any unitary map on~$\hilb{H}_E$.
 Following~\cite{kosut_2006,floether_2012}, we have
 \begin{align}
 \notag
 E
-&= \min_{\Phi \in \text{U}(m)} D(U_f \otimes \Phi, B)
-= 1 -\max_{\Phi \in \text{U}(m)} \frac{1}{|A|^2} \re \tr\left((U_f^\dagger \otimes \Phi^\dagger) B\right)\\
-&= 1 -\frac{1}{|A|^2} \left\|\tr_S(A^\dagger B)\right\|_{\tr}
-= 1 -\frac{1}{|A|^2} \left\|g(A, B)\right\|_{\tr}
-%= 1 -\frac{1}{|A|^2} \tr \sqrt{Q^\dagger Q}
+&= \min_{\Phi \in \text{U}(m)} D(A, B)
+%= \min_{\Phi \in \text{U}(m)} D(U_f \otimes \Phi, B)
+= 1 -\max_{\Phi \in \text{U}(m)} \frac{1}{\|A\|^2} \re \tr\left((U_f^\dagger \otimes \Phi^\dagger) B\right)\\
+&= 1 -\frac{1}{\|A\|^2} \left\|\tr_S(A^\dagger B)\right\|_{\tr}
+%= 1 -\frac{1}{\|A\|^2} \left\|g(A, B)\right\|_{\tr}
+%= 1 -\frac{1}{\|A\|^2} \tr \sqrt{Q^\dagger Q}
 = E_\text{abs}(A, B),
 \end{align}
 where $m = \dim \hilb{H}_E$.
@@ -678,30 +755,39 @@ Gradient:
 \subsection{Open system with a Markovian bath}
 
 In this case our system is coupled to a Markovian bath, and thus
-we have to work in a Liouville space.
-The generators~$G_k$ are Liouvillians, expressible in terms of
-Hamiltonians and Lindblad operators.
-Again, as in the closed system case, our total system may also consist of 
-a system~$S$ coherently coupled to an environment~$E$.
+we have to work in a Liouville space~$\hilb{L}$,
+with $\dim \hilb{L} = (\dim \hilb{H})^2$.
 We use the $\cvec$-representation of state
 operators, explained in Appendix~\ref{sec:vec},
 as the mapping between the Hilbert and Liouville spaces.
+The generators~$G_k$ are Liouvillians, expressible in terms of
+Hamiltonians and Lindblad operators, and in general no longer normal.
+Hence the propagator gradient may \emph{not} be computed using the exact
+method in Sec.~\ref{sec:dPdu_normal}.
+Again, as in the closed system case, our total system may also consist of
+a system~$S$ coherently coupled to an environment~$E$.
 
 An important difference to the closed system case is that a general Markovian propagation
-does not necessarily conserve purity and unitarity:
-\be
-|B|^2 = \tr\left(X_i^\dagger \left(\prod_{k=1}^{n} P_k\right)^\dagger \left(\prod_{k=1}^{n} P_k\right) X_i\right).
-\ee
-If $G_k$ is normal $\eq \quad [G_k, G^\dagger_k] = 0$, we have
-\be
-P_k^\dagger P_k
-= \exp(\tau_k G^\dagger_k) \exp(\tau_k G_k)
-= \exp(\tau_k (G_k^\dagger + G_k)).
-\ee
-If all the generators $G_k$ are antihermitian, this reduces to $\I$ and thus
-$|B|^2 = \tr(X_i^\dagger X_i) = |X_i|^2$, but usually this is not
-the case.
-%(X1) is not satisfied and fidelity does not uniquely define the distance.
+does not necessarily conserve purity and unitarity.
+If the generators~$G_k$ are not antihermitian, we may no longer have
+$\|B\|^2 = \|X_i\|^2$. When this is the case
+fidelity does not uniquely define the distance and we must use the
+full distance measure~$D(A,B)$ instead.
+
+
+%\be
+%\|B\|^2 = \tr\left(X_i^\dagger \left(\prod_{k=1}^{n} P_k\right)^\dagger \left(\prod_{k=1}^{n} P_k\right) X_i\right).
+%\ee
+%If $G_k$ is normal $\eq \quad [G_k, G^\dagger_k] = 0$, we have
+%\be
+%P_k^\dagger P_k
+%= \exp(\tau_k G^\dagger_k) \exp(\tau_k G_k)
+%= \exp(\tau_k (G_k^\dagger + G_k)).
+%\ee
+%If all the generators $G_k$ are antihermitian, this reduces to $\I$ and thus
+%$\|B\|^2 = \tr(X_i^\dagger X_i) = \|X_i\|^2$, but usually this is not
+%the case.
+
 
 
 
@@ -709,13 +795,13 @@ the case.
 
 $X~=~\cvec(\rho)$, a vector in Liouville space. Again, like in
 Sec.~\ref{sec:closed-mixed}, we obtain
-$|X|^2 = \tr(\rho^2) = P(\rho)$.
+$\|X\|^2 = \tr(\rho^2) = P(\rho)$.
 
 The correct error function is
 \be
 E
 = D(A, B)
-%= \frac{1}{2}\left(1 +\frac{|B|^2}{|A|^2}\right) -\frac{1}{|A|^2} \re \tr(A^\dagger B)
+%= \frac{1}{2}\left(1 +\frac{\|B\|^2}{\|A\|^2}\right) -\frac{1}{\|A\|^2} \re \tr(A^\dagger B)
 = E_\text{full}(A, B).
 \ee
 
@@ -729,15 +815,15 @@ E
 = 1 -(\re \tr)\left(A^\dagger B\right)
 = E_\text{real}(A, B) \le 1.
 \ee
+This is cheaper to compute than~$E_\text{full}(A, B)$, but not equivalent to it.
 
 
-
-\subsubsection{General quantum map $\I \to F_f$}
+\subsubsection{General quantum map $F_i \to F_f$}
 
 $X$ is a general quantum map in the vec-representation on Liouville space.
 A unitary target map~$U_f$ would be given by
-$X_f = \hat{U_f}$, which yields $|A|^2 = (\dim \hilb{H})^2$.
-However, the norm $|B|^2$ of the propagated operator
+$X_f = \vecop{U_f}$, which yields $\|A\|^2 = (\dim \hilb{H})^2$.
+However, the norm $\|B\|$ of the propagated operator
 is not necessarily constant. The error function is again
 \be
 E
@@ -750,7 +836,7 @@ E
 
 We want to transform the state~$\rho_i$ on $S$ into~$\rho_f$.
 $X$ is the vec-representation of a state operator on~$\hilb{H}_{SE}$.
-Again, $|X|^2 = P(\rho)$.
+Again, $\|X\|^2 = P(\rho)$.
 The initial state is assumed to be of tensor product form.
 We define $X_i = \cvec(\rho_i \otimes \rho_E)$,
 and~$X_f = \rho_f$.
@@ -760,94 +846,107 @@ E
 = D(A, \tr_E(B))
 = E_\text{partial}(A, B).
 \ee
-
+FIXME inv.vec
 
 
 \subsubsection{Partial unitary propagator $\I \to U_f$}
 
-TODO
-
-
+$X$ is a quantum map in the $\cvec$-representation on the Liouville
+space corresponding to the Hilbert space~$\hilb{H}_{SE}$.
+$X_f = \vecop{U_f \otimes \Phi}$
+where $\Phi$ is any unitary map on~$\hilb{H}_E$, and
+$X_i = \vecop{U_i \otimes U_E}$ with $U_E$ unspecified at this point.
+Due to the unitarity we have $\|A\|^2 = d_S^2 d_E^2$ regardless of~$\Phi$,
+but $\|B\|$~is not constant. Hence we must use the full error function.
+\begin{align}
+\notag
+E
+&= \min_{\Phi \in \text{U}(m)} D(A, B)
+= \frac{1}{2}\left(1 +\frac{\|B\|^2}{\|A\|^2}\right)
+-\max_{\Phi \in \text{U}(m)} \frac{1}{\|A\|^2} \re \inprod{A}{B}.
+\end{align}
+TODO It seems we cannot use the method in Sec.~\ref{sec:partU}
+because the SVD yields generic $U(d_E^2)$ unitaries whereas $\vecop{\Phi}$
+is of a more limited form and thus cannot always absorb them.
 
 \subsection{Error functions and their gradients}
 
 Here we summarize all the error functions encountered above, and explain how they and their gradients are computed.
-The form of the expressions leads us to cache slightly different objects with
-each error function to speed up the computation, presented in table~\ref{table:UL}.
-
-
+The error functions are
 \begin{align}
-E_\text{real}(A, B) &:= 1 -\frac{1}{|A|^2} \re g(A, B),\\
-E_\text{abs}(A, B) &:= 1 -\frac{1}{|A|^2} \left\|g(A, B)\right\|_{\tr}
-= 1 -\frac{1}{|A|^2} \tr \sqrt{g^\dagger g}
-= 1 -\frac{1}{|A|^2} \tr S,\\
-E_\text{full}(A, B) &:= \frac{1}{2}\left(1 +\frac{|B|^2}{|A|^2}\right) -\frac{1}{|A|^2} \re \tr(A^\dagger B),\\
+E_\text{real}(A, B) &:= 1 -\frac{1}{\|A\|^2} \re g(A, B),\\
+E_\text{abs}(A, B) &:= 1 -\frac{1}{\|A\|^2} \left\|g(A, B)\right\|_{\tr}
+= 1 -\frac{1}{\|A\|^2} \tr \sqrt{g^\dagger g}
+= 1 -\frac{1}{\|A\|^2} \tr \Sigma,\\
+E_\text{full}(A, B) &:= \frac{1}{2}\left(1 +\frac{\|B\|^2}{\|A\|^2}\right) -\frac{1}{\|A\|^2} \re \tr(A^\dagger B),\\
 E_\text{partial}(A, B) &:= E_\text{full}(A, \tr_E(B)),
 \end{align}
 where the auxiliary function $g$ is given by
 \begin{align}
 g(A, B) &:= \tr_S(A^\dagger B).
 \end{align}
-In the expression for $E_\text{abs}$ we have used the singular value decomposition $g = U S V^\dagger$.
+In the expression for $E_\text{abs}$ we have used the singular value decomposition $g = W \Sigma V^\dagger$.
 Note that when $\dim \hilb{H}_E = 1$, $g(A,B)$ is a scalar and the trace norm in $E_\text{abs}$
 reduces to a simple absolute value.
-% TODO SVD U,V get mixed up with U_k
+
 
 All of these functions and their gradients can be efficiently computed
-using the $U$s and $\Lambda$s
+using the $\spr_k$ and $\Lambda_k$
 for any $j, k \in \{0, \ldots, n\}$:
 \begin{align}
-g(A, B) &= \tr(X_f^\dagger \Lambda_k U_k X_i)
-= \tr(\Lambda'_{k+1} U'_{k+1}),\\
-g(Y_f, Y_n) &= \tr(\Lambda_k^\dagger Y_f^\dagger \Lambda_k U_k Y_i U_k^\dagger)
-= \tr(\Lambda'_{k+1} U'_{k+1}),\\
+g(A, B) &= \tr_S(X_f^\dagger \Lambda_k \spr_k X_i)
+= \tr_S(L_{k+1} U_{k+1}),\\
+g(Y_f, Y_n) &= \tr_S(\Lambda_k^\dagger Y_f^\dagger \Lambda_k \spr_k Y_i \spr_k^\dagger)
+= \tr_S(L_{k+1} U_{k+1}),\\
 \notag
-E_\text{full}(A, B) &= \frac{1}{2}\left(1 +\frac{|\Lambda_j U_j X_i|^2}{|X_f|^2}\right) -\frac{1}{|X_f|^2} \re \tr(X_f^\dagger \Lambda_k U_k X_i)\\
-&= \frac{1}{2}\left(1 +\frac{|\Lambda'_{j+1} U'_{j+1}|^2}{|X_f|^2}\right) -\frac{1}{|X_f|^2} \re \tr(X_f^\dagger \Lambda'_{k+1} U'_{k+1}).
+E_\text{full}(A, B) &= \frac{1}{2}\left(1 +\frac{\|\Lambda_j \spr_j X_i\|^2}{\|X_f\|^2}\right) -\frac{1}{\|X_f\|^2} \re \tr(X_f^\dagger \Lambda_k \spr_k X_i)\\
+&= \frac{1}{2}\left(1 +\frac{\|L_{j+1} U_{j+1}\|^2}{\|X_f\|^2}\right) -\frac{1}{\|X_f\|^2} \re \tr(X_f^\dagger L_{k+1} U_{k+1}).
 %E_\text{partial}(A, B)
-%&= \frac{1}{2}\left(1 +\frac{|\tr_E(\Lambda'_{j+1} U'_{j+1})|^2}{|X_f|^2}\right) -\frac{1}{|X_f|^2} \re \tr(X_f^\dagger \tr_E(\Lambda'_{k+1} U'_{k+1})).
+%&= \frac{1}{2}\left(1 +\frac{\|\tr_E(L_{j+1} U_{j+1})\|^2}{\|X_f\|^2}\right) -\frac{1}{\|X_f\|^2} \re \tr(X_f^\dagger \tr_E(L_{k+1} U_{k+1})).
 \end{align}
 
+\begin{table}
+\begin{tabular}{l|c|c}
+error function & $U_{k+1}$ = $X_k$ & $L_{k+1}$\\
+\hline
+$E_\text{abs}$, $E_\text{real}$ & $\spr_k X_i$ & $X_f^\dagger \Lambda_k$\\
+$E_\text{mixed}$ & $\spr_k Y_i \spr_k^\dagger$ & $\Lambda_k^\dagger Y_f^\dagger \Lambda_k$\\
+$E_\text{full}$, $E_\text{partial}$ & $\spr_k X_i$ & $\Lambda_k$
+\end{tabular}
+\caption{Definitions of the cached objects $U$ and $L$ used in \DYNAMO{}
+  code. $k \in \{0, \ldots, n\}$.}
+\label{table:UL}
+\end{table}
 
-Gradients ($A$ is always constant):
+
+The form of the expressions leads us to cache slightly different objects with
+each error function to speed up the computation, presented in table~\ref{table:UL}.
+The gradients ($A$ is always constant) are
 \begin{align}
 \dd{E_\text{real}(A,B)}{u}
-&= -\frac{1}{|A|^2} \re \left( \dd{g}{u} \right),\\
+&= -\frac{1}{\|A\|^2} \re \left( \dd{g}{u} \right),\\
 \dd{E_\text{abs}(A,B)}{u}
-&= -\frac{1}{|A|^2} \re \tr \left(\left(\sqrt{g^\dagger g}\right)^{-1} g^\dagger \dd{g}{u}\right)
-= -\frac{1}{|A|^2} \re \tr \left(V S^{-1} S U^\dagger \dd{g}{u}\right),\\
-\dd{g(A, B)}{u} &= \tr(X_f^\dagger \Lambda_{k} \left(\dd{P_k}{u}\right) U_{k-1} X_i)
-= \tr(\Lambda'_{k+1} \left(\dd{P_k}{u}\right) U'_{k}),\\
-\dd{g(Y_f, Y_n)}{u} &= 2 \re \tr\left(\Lambda_k^\dagger Y_f^\dagger \Lambda_k \left(\dd{P_k}{u}\right) U_{k-1} Y_i U_{k-1}^\dagger P_k^\dagger \right)
-= 2 \re \tr\left(\Lambda'_{k+1} \left(\dd{P_k}{u}\right) U'_{k} P_k^\dagger \right), \quad \text{and}\\
+&= -\frac{1}{\|A\|^2} \re \tr \left(\left(\sqrt{g^\dagger g}\right)^{-1} g^\dagger \dd{g}{u}\right)
+= -\frac{1}{\|A\|^2} \re \tr \left(V \Sigma^{-1} \Sigma W^\dagger \dd{g}{u}\right),\\
+\dd{g(A, B)}{u} &= \tr(X_f^\dagger \Lambda_{k} \left(\dd{P_k}{u}\right) \spr_{k-1} X_i)
+= \tr(L_{k+1} \left(\dd{P_k}{u}\right) U_{k}),\\
+\dd{g(Y_f, Y_n)}{u} &= 2 \re \tr\left(\Lambda_k^\dagger Y_f^\dagger \Lambda_k \left(\dd{P_k}{u}\right) \spr_{k-1} Y_i \spr_{k-1}^\dagger P_k^\dagger \right)
+= 2 \re \tr\left(L_{k+1} \left(\dd{P_k}{u}\right) U_{k} P_k^\dagger \right), \quad \text{and}\\
 \dd{E_\text{full}(A, B)}{u}
-&= \frac{1}{|X_f|^2} \re \tr\left((X_n-X_f)^\dagger \dd{X_n}{u}\right)
-= \frac{1}{|X_f|^2} \re \tr\left((\Lambda_k U_k X_i -X_f)^\dagger  \Lambda_{k} \left(\dd{P_k}{u}\right) U_{k-1} X_i \right)\\
-&= \frac{1}{|X_f|^2} \re \tr\left((\Lambda'_{k+1} U'_{k+1} -X_f)^\dagger  \Lambda'_{k+1} \left(\dd{P_k}{u}\right) U'_{k} \right),\\
+&= \frac{1}{\|A\|^2} \re \tr\left((B-A)^\dagger \dd{B}{u}\right)
+= \frac{1}{\|X_f\|^2} \re \tr\left((\Lambda_k \spr_k X_i -X_f)^\dagger  \Lambda_{k} \left(\dd{P_k}{u}\right) \spr_{k-1} X_i \right)\\
+&= \frac{1}{\|X_f\|^2} \re \tr\left((L_{k+1} U_{k+1} -X_f)^\dagger  L_{k+1} \left(\dd{P_k}{u}\right) U_{k} \right),\\
 \dd{E_\text{partial}(A, B)}{u}
-&= \frac{1}{|X_f|^2} \re \tr\left((\tr_E(\Lambda'_{k+1} U'_{k+1}) -X_f)^\dagger  \tr_E(\Lambda'_{k+1} \left(\dd{P_k}{u}\right) U'_{k}) \right).
+&= \frac{1}{\|X_f\|^2} \re \tr\left((\tr_E(L_{k+1} U_{k+1}) -X_f)^\dagger  \tr_E(L_{k+1} \left(\dd{P_k}{u}\right) U_{k}) \right).
 \end{align}
-Note again that when $\dim \hilb{H}_E = 1$, the gradient of $E_\text{abs}$
+Note that when $\dim \hilb{H}_E = 1$, the gradient of $E_\text{abs}$
 reduces to
-$-\frac{1}{|A|^2} \re \left(\frac{g^*}{|g|} \dd{g}{u} \right)$.
-
+$-\frac{1}{\|A\|^2} \re \left(\frac{g^*}{|g|} \dd{g}{u} \right)$.\\
 Note also the $2 \re$ in the gradient expression  
 for the special case of mixed state transfer in a closed system.
 
 
 
-\begin{table}
-\begin{tabular}{l|c|c}
-error function & $U'_{k+1}$ = $X_k$ & $\Lambda'_{k+1}$\\
-\hline
-$E_\text{abs}$, $E_\text{real}$ & $U_k X_i$ & $X_f^\dagger \Lambda_k$\\
-$E_\text{mixed}$ & $U_k Y_i U_k^\dagger$ & $\Lambda_k^\dagger Y_f^\dagger \Lambda_k$\\
-$E_\text{full}$, $E_\text{partial}$ & $U_k X_i$ & $\Lambda_k$
-\end{tabular}
-\caption{Definitions of the cached objects $U'$ and $\Lambda'$ used in \DYNAMO{}
-  code. $k \in \{0, \ldots, n\}$.}
-\label{table:UL}
-\end{table}
 
 
 
@@ -1065,7 +1164,7 @@ We use the Hilbert-Schmidt inner product for both vectors and matrices:
 \ee
 It induces the Frobenius norm:
 \be
-|X| := \sqrt{\inprod{X}{X}} = \sqrt{\tr\left(X^\dagger X\right)}.
+\|X\| := \sqrt{\inprod{X}{X}} = \sqrt{\tr\left(X^\dagger X\right)}.
 \ee
 
 If $X$ and $Y$ are Hermitian, $\inprod{X}{Y} \in \R$.
@@ -1081,20 +1180,20 @@ invertible, and we also have
 \cvec(A \rho B) = (B^T \otimes A) \cvec(\rho)
 \ee
 for any Hilbert space operators~$A, B$.
-Consequently, the Liouville space equivalent~$\hat{U}$ for a unitary Hilbert space
+Consequently, the Liouville space equivalent~$\vecop{U}$ for a unitary Hilbert space
 propagator~$U$ is
 \be
 \label{eq:L-unitary}
-\hat{U} := U^* \otimes U,
+\vecop{U} := U^* \otimes U,
 \ee
 since
 \be
-\cvec(U \rho U^\dagger) = (U^* \otimes U) \cvec(\rho) = \hat{U} \cvec(\rho).
+\cvec(U \rho U^\dagger) = (U^* \otimes U) \cvec(\rho) = \vecop{U} \cvec(\rho).
 \ee
 We then have for any~$A$,~$B$
 \be
 \label{eq:hat-product}
-\inprod{\hat{A}}{\hat{B}}
+\inprod{\vecop{A}}{\vecop{B}}
 = \tr((A^* \otimes A)^\dagger (B^* \otimes B))
 = \tr((A^T B^*) \otimes (A^\dagger B))
 %= \tr((A^\dagger B)^* \otimes (A^\dagger B))
