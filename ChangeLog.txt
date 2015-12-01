@@ -9,6 +9,7 @@ b bugfix
 1.4.0       in progress
               * docs: User manual expanded and updated.
               * dynamo: Stats system can handle several optimization runs.
+                Interrupted runs can be continued automatically.
               + dynamo/shake: Randomly perturbs the control sequence, can be used to get out of local optima.
               + dynamo/split: Refines the control sequence by splitting given bins into several.
               + dynamo/gradient_full_exact: Exact gradient using the auxiliary matrix technique.

@@ -97,17 +97,15 @@ L_drift = superop_lindblad(sink, H_drift) +superop_lindblad(diss) +superop_lindb
 %% controls
 
 % Control Hamiltonians
-H_ctrl = {};
+[H_ctrl, c_labels] = control_ops(dim, '1:3z')
 for k = 1:n_sites
-    temp = op_list({{SZ, k}}, dim);
-    H_ctrl{end+1} = temp(p,p);
+    H_ctrl{k} = full(H_ctrl{k}(p,p));
 end
 
 % transformed controls?
 control_type = char('m' + zeros(1, length(H_ctrl)));
-pp = [-4, 8];
+pp = [-1, 2] * 8;
 control_par = {pp, pp, pp};
-c_labels = {'Z_1', 'Z_2', 'Z_3'};
 
 
 %% initial and final states
@@ -122,7 +120,7 @@ dyn.system.set_labels(desc, st_labels, c_labels);
 % try the expensive-but-reliable gradient method
 %dyn.config.epsilon = 1e-3;
 %dyn.config.error_func    = @error_full;
-%dyn.config.gradient_func = @gradient_full_finite_diff;
+%dyn.config.gradient_func = @gradient_full_exact;
 
 
 %% set up controls
@@ -130,10 +128,11 @@ T = 10;
 dyn.seq_init(151, T * [0.5, 1.0], control_type, control_par);
 %dyn.easy_control(0.1 * ones(1,n_sites));
 dyn.easy_control(0.05*[1 2 3]);
+%dyn.easy_control([0 2.6 0]);
 
 
 %% now do the actual search
 
 dyn.ui_open();
-dyn.search_BFGS();
+dyn.search();
 %dyn.analyze();

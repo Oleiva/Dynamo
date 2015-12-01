@@ -31,7 +31,7 @@ offset = 0;
 for k=1:length(self.stats)
     semilogy(ax, self.stats{k}.wall_time+offset, abs(self.stats{k}.error));
     hold on;
-    semilogy(ax, self.stats{k}.wall_time(1)+offset, abs(self.stats{k}.error(1)), 'ko');
+    semilogy(ax, self.stats{k}.wall_time(end)+offset, abs(self.stats{k}.error(end)), 'ko');
     offset = offset +self.stats{k}.wall_time(end);
 end
 grid on;

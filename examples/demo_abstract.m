@@ -66,7 +66,7 @@ dyn.easy_control(randn(1,2));
 %% optimize
 
 dyn.ui_open();
-dyn.search_BFGS();
+dyn.search();
 %dyn.analyze();
 %figure; dyn.plot_X();
 %figure; dyn.plot_seq();

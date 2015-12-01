@@ -24,7 +24,7 @@ dyn.seq_init(100, 6 * [1, 0]);
 dyn.easy_control([-0.1, 0.05]);
 
 dyn.ui_open();
-dyn.search_BFGS();
+dyn.search();
 %dyn.analyze();
 %figure; dyn.plot_X();
 %figure; dyn.plot_seq();

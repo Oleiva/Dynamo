@@ -263,7 +263,7 @@ dyn.easy_control(1e-3 * f7_5_plenio, 0.0, 0, false);
 figure(); dyn.plot_X(0.001);
 
 dyn.ui_open();
-dyn.search_BFGS();
+dyn.search();
 
 % "after" plot
 figure(); dyn.plot_X(0.001);

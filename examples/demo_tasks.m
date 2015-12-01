@@ -168,7 +168,7 @@ mask = dyn.full_mask(false);
 %% Now do the actual search
 
 dyn.ui_open();
-dyn.search_BFGS(mask);
+dyn.search(mask);
 %dyn.analyze();
 %figure; dyn.plot_X();
 end

@@ -59,6 +59,6 @@ dyn.easy_control(0, 0, 1, false);
 %% Now do the actual search
 
 dyn.ui_open();
-dyn.search_BFGS();
+dyn.search();
 dyn.analyze();
 end
