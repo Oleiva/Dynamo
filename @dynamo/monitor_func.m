@@ -6,6 +6,8 @@ wt = (now() -self.opt.wall_start) * 24*60*60; % elapsed time in seconds
 ct = cputime() -self.opt.cpu_start;
 
 
+%% Check for user interrupt
+
 drawnow(); % flush drawing events and callbacks (incl. user interrupts)
 
 % check for stop signal from the UI
@@ -20,7 +22,7 @@ end
 
 % Refresh the UI figure.
 temp = self.opt.options.plot_interval;
-if ~isempty(self.config.ui_fig) && temp && mod(self.opt.N_iter, temp) == 0
+if ~isempty(self.config.ui_fig) && temp && mod(self.opt.n_iter, temp) == 0
     self.ui_refresh(false, optimValues.fval);
 end
 
@@ -28,10 +30,10 @@ end
 %% Check termination conditions
 
 % TODO some of these are already present in optimValues...
-self.opt.N_iter = self.opt.N_iter + 1;
+self.opt.n_iter = self.opt.n_iter +1;
 
-if self.opt.N_eval >= self.opt.options.max_loop_count
-    self.opt.term_reason = 'Loop count limit reached';
+if self.opt.n_eval >= self.opt.options.max_evals
+    self.opt.term_reason = 'Evaluation limit reached';
     stop = true;
 end
 

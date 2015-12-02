@@ -1,5 +1,5 @@
 function init_opt(self)
-% Initialize the optimization options and statistics.
+% Initialize the run-specific optimization data and statistics.
 
 %% statistics
 
@@ -12,8 +12,8 @@ self.opt.control_integral  = self.seq.integral();
 %% other optimization data
 
 self.opt.initial_controls = self.seq.get();
-self.opt.N_iter = 0;
-self.opt.N_eval = 0;
+self.opt.n_iter = 0;
+self.opt.n_eval = 0;
 self.opt.term_reason = 'None yet';
 self.opt.wall_start = now();
 self.opt.cpu_start = cputime();

@@ -6,7 +6,7 @@ err = self.compute_error();
 fprintf('Final normalized error: %g\n    Wall time: %g s\n    CPU  time: %g s\nTermination reason: %s\n\n\n', ...
 	err, self.opt.wall_time(end), self.opt.cpu_time(end), self.opt.term_reason);
 
-fprintf('Number of gradient evaluations: %d\n', self.opt.N_eval);
+fprintf('Number of gradient evaluations: %d\n', self.opt.n_eval);
 fprintf('Final sequence duration: %g\n', sum(self.seq.tau));
 
 
