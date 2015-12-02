@@ -128,8 +128,8 @@ dyn.seq_init(n_bins, T * [1, 0]); %, control_type, control_par);
 % random, constant initial controls
 dyn.easy_control(0.1 * randn(1, n_controls));
 
-dyn.ui_open();
-dyn.search(dyn.full_mask(false));
+%dyn.ui_open();
+%dyn.search(dyn.full_mask(false));
 end
 
 

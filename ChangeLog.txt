@@ -16,4 +16,5 @@ b bugfix
               + dynamo/gradient_full_exact: Exact gradient using the auxiliary matrix technique.
               + test: Unit tests for DYNAMO.
               + test_rand_problem: Generates random optimization problems for testing/benchmarking purposes.
+              + test_benchmark: Measures the walltime required to compute different errors and gradients.
               b dynamo/gradient_setup: gradient_g_mixed_exact provided with wrong *_needed_now
