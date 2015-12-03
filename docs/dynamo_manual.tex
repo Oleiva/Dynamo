@@ -305,6 +305,13 @@ more terms from the series in Eq.~\eqref{eq:dPdu_commseries}.
 The downside is that we must keep track of~$\|G\|$ and adjust the
 slice duration~$\tau$ accordingly.
 
+Another option is the scaling and squaring method~\cite{}, in which
+one writes the propagator as
+$P = e^{\tau G} = \left(e^{\tau G/2^n}\right)^{2^n}$.
+Here $n$~is the number of squarings, chosen such that
+$\|\tau G\|/2^n \in [0,1]$.
+
+
 \subsubsection{Normal generators}
 \label{sec:dPdu_normal}
 
@@ -384,7 +391,14 @@ If $A$ and $B$ are Hermitian, $\re$ is unnecessary and the fidelity corresponds 
 If $\|B\|$ is constant (does not depend on the control sequence), we can see from Eq.~\eqref{eq:df} that
 the minimum distance corresponds to maximum fidelity.
 
-% NOTE fidelity is the real part of an inner product, one can use Cauchy-Schwarz inequality...
+A concrete example where simply maximizing the fidelity will fail is when comparing mixed states of a qubit.
+In this case $D(A,B) = \frac{|\vec{a}-\vec{b}|^2}{2(1+|\vec{a}|^2)}$
+whereas $f(A,B) = \frac{1+\vec{a}\cdot\vec{b}}{1+|\vec{a}|^2}$, where
+$\vec{a}$ and $\vec{b}$ are Bloch vectors. If $|\vec{a}| < 1$, the
+fidelity is maximized by a $\vec{b}$ that points in the same direction
+but has unit length, which clearly does not minimize~$D(A,B)$.
+
+
 Clearly $f(A, A) = 1$.
 The triangle inequality $\|A-B\| \le \|A\|+\|B\|$ yields
 \be
@@ -433,7 +447,7 @@ Closed system & S
 Closed system & SE
 & $\rho_i \to \rho_f$ & H
 & $\rho_i \otimes \rho_E$ & $\rho_f$ & $P(\rho)$ &
-\eqref{eq:vonneumann} & $E_\text{partial}$\\
+\eqref{eq:vonneumann} & $E_\text{full}$\\
 & & $U_i \to U_f$ & H
 & $U_i \otimes \I_E$ & $U_f \otimes \I_E$ & $d_S d_E$ &
 \eqref{eq:master} & $E_\text{abs}$\\
@@ -450,7 +464,7 @@ Open system & S
 Open system & SE
 & $\rho_i \to \rho_f$ & L
 & $\cvec(\rho_i \otimes \rho_E)$ & $\rho_f$ & $P(\rho)$ &
-\eqref{eq:master} & $E_\text{partial}$\\
+\eqref{eq:master} & $E_\text{full}$\\
 & & $U_i \to U_f$ & L & TODO
 \end{tabular}
 \caption{Summary of the optimization tasks.
@@ -695,8 +709,7 @@ the propagation happens using the von Neumann equation.
 E
 = D(A, \tr_E(B))
 %= \frac{1}{2}\left(1 +\frac{|\tr_E(B)|^2}{\|A\|^2)}\right) -\frac{1}{\|A\|^2} \re \tr(A^\dagger \tr_E(B))
-= E_\text{full}(A, \tr_E(B))
-= E_\text{partial}(A, B).
+= E_\text{full}(A, B).
 \ee
 
 
@@ -839,14 +852,13 @@ $X$ is the vec-representation of a state operator on~$\hilb{H}_{SE}$.
 Again, $\|X\|^2 = P(\rho)$.
 The initial state is assumed to be of tensor product form.
 We define $X_i = \cvec(\rho_i \otimes \rho_E)$,
-and~$X_f = \rho_f$.
+and~$X_f = \cvec(\rho_f)$.
 The error is obtained using a partial trace over~$E$:
 \be
 E
 = D(A, \tr_E(B))
-= E_\text{partial}(A, B).
+= E_\text{full}(A, B).
 \ee
-FIXME inv.vec
 
 
 \subsubsection{Partial unitary propagator $\I \to U_f$}
@@ -878,8 +890,7 @@ E_\text{real}(A, B) &:= 1 -\frac{1}{\|A\|^2} \re g(A, B),\\
 E_\text{abs}(A, B) &:= 1 -\frac{1}{\|A\|^2} \left\|g(A, B)\right\|_{\tr}
 = 1 -\frac{1}{\|A\|^2} \tr \sqrt{g^\dagger g}
 = 1 -\frac{1}{\|A\|^2} \tr \Sigma,\\
-E_\text{full}(A, B) &:= \frac{1}{2}\left(1 +\frac{\|B\|^2}{\|A\|^2}\right) -\frac{1}{\|A\|^2} \re \tr(A^\dagger B),\\
-E_\text{partial}(A, B) &:= E_\text{full}(A, \tr_E(B)),
+E_\text{full}(A, B) &:= \frac{1}{2}\left(1 +\frac{\|\tr_E(B)\|^2}{\|A\|^2}\right) -\frac{1}{\|A\|^2} \re \tr(A^\dagger \tr_E(B))
 \end{align}
 where the auxiliary function $g$ is given by
 \begin{align}
@@ -899,21 +910,21 @@ g(A, B) &= \tr_S(X_f^\dagger \Lambda_k \spr_k X_i)
 g(Y_f, Y_n) &= \tr_S(\Lambda_k^\dagger Y_f^\dagger \Lambda_k \spr_k Y_i \spr_k^\dagger)
 = \tr_S(L_{k+1} U_{k+1}),\\
 \notag
-E_\text{full}(A, B) &= \frac{1}{2}\left(1 +\frac{\|\Lambda_j \spr_j X_i\|^2}{\|X_f\|^2}\right) -\frac{1}{\|X_f\|^2} \re \tr(X_f^\dagger \Lambda_k \spr_k X_i)\\
-&= \frac{1}{2}\left(1 +\frac{\|L_{j+1} U_{j+1}\|^2}{\|X_f\|^2}\right) -\frac{1}{\|X_f\|^2} \re \tr(X_f^\dagger L_{k+1} U_{k+1}).
-%E_\text{partial}(A, B)
-%&= \frac{1}{2}\left(1 +\frac{\|\tr_E(L_{j+1} U_{j+1})\|^2}{\|X_f\|^2}\right) -\frac{1}{\|X_f\|^2} \re \tr(X_f^\dagger \tr_E(L_{k+1} U_{k+1})).
+E_\text{full}(A, B) &= \frac{1}{2}\left(1 +\frac{\|\tr_E(\Lambda_j \spr_j X_i)\|^2}{\|X_f\|^2}\right)
+-\frac{1}{\|X_f\|^2} \re \tr(X_f^\dagger \tr_E(\Lambda_k \spr_k X_i))\\
+&= \frac{1}{2}\left(1 +\frac{\|\tr_E(L_{j+1} U_{j+1})\|^2}{\|X_f\|^2}\right)
+-\frac{1}{\|X_f\|^2} \re \tr(X_f^\dagger \tr_E(L_{k+1} U_{k+1})).
 \end{align}
 
 \begin{table}
-\begin{tabular}{l|c|c}
-error function & $U_{k+1}$ = $X_k$ & $L_{k+1}$\\
+\begin{tabular}{l|c|c|c}
+error function & $U_{k+1}$ = $X_k$ & $L_{k+1}$ & g\\
 \hline
-$E_\text{abs}$, $E_\text{real}$ & $\spr_k X_i$ & $X_f^\dagger \Lambda_k$\\
-$E_\text{mixed}$ & $\spr_k Y_i \spr_k^\dagger$ & $\Lambda_k^\dagger Y_f^\dagger \Lambda_k$\\
-$E_\text{full}$, $E_\text{partial}$ & $\spr_k X_i$ & $\Lambda_k$
+$E_\text{abs}$, $E_\text{real}$ & $\spr_k X_i$ & $X_f^\dagger \Lambda_k$ & $\tr_S(L_k U_k)$\\
+$E_\text{mixed}$ & $\spr_k Y_i \spr_k^\dagger$ & $\Lambda_k^\dagger Y_f^\dagger \Lambda_k$ & $\tr_S(L_k U_k)$\\
+$E_\text{full}$ & $\spr_k X_i$ & $\Lambda_k$ & $\tr_E(L_k U_k)$
 \end{tabular}
-\caption{Definitions of the cached objects $U$ and $L$ used in \DYNAMO{}
+\caption{Definitions of the cached objects $U$, $L$ and $g$ used in \DYNAMO{}
   code. $k \in \{0, \ldots, n\}$.}
 \label{table:UL}
 \end{table}
@@ -932,11 +943,10 @@ The gradients ($A$ is always constant) are
 = \tr(L_{k+1} \left(\dd{P_k}{u}\right) U_{k}),\\
 \dd{g(Y_f, Y_n)}{u} &= 2 \re \tr\left(\Lambda_k^\dagger Y_f^\dagger \Lambda_k \left(\dd{P_k}{u}\right) \spr_{k-1} Y_i \spr_{k-1}^\dagger P_k^\dagger \right)
 = 2 \re \tr\left(L_{k+1} \left(\dd{P_k}{u}\right) U_{k} P_k^\dagger \right), \quad \text{and}\\
+\notag
 \dd{E_\text{full}(A, B)}{u}
-&= \frac{1}{\|A\|^2} \re \tr\left((B-A)^\dagger \dd{B}{u}\right)
-= \frac{1}{\|X_f\|^2} \re \tr\left((\Lambda_k \spr_k X_i -X_f)^\dagger  \Lambda_{k} \left(\dd{P_k}{u}\right) \spr_{k-1} X_i \right)\\
-&= \frac{1}{\|X_f\|^2} \re \tr\left((L_{k+1} U_{k+1} -X_f)^\dagger  L_{k+1} \left(\dd{P_k}{u}\right) U_{k} \right),\\
-\dd{E_\text{partial}(A, B)}{u}
+&= \frac{1}{\|A\|^2} \re \tr\left((\tr_E(B)-A)^\dagger \dd{\tr_E(B)}{u}\right)
+= \frac{1}{\|X_f\|^2} \re \tr\left((\tr_E(\Lambda_k \spr_k X_i) -X_f)^\dagger  \tr_E(\Lambda_{k} \left(\dd{P_k}{u}\right) \spr_{k-1} X_i) \right)\\
 &= \frac{1}{\|X_f\|^2} \re \tr\left((\tr_E(L_{k+1} U_{k+1}) -X_f)^\dagger  \tr_E(L_{k+1} \left(\dd{P_k}{u}\right) U_{k}) \right).
 \end{align}
 Note that when $\dim \hilb{H}_E = 1$, the gradient of $E_\text{abs}$

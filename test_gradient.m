@@ -37,10 +37,10 @@ end
 %% choose an error function and a compatible gradient
 
 ff = 'full'
-gg = 'exact'
+gg = 'eig'
 
 % for the finite_diff methods only
-d.config.epsilon = 1e-3;
+d.config.epsilon = 1e-4;
 
 ttt = ['error\_', ff, ', gradient\_', gg];
 switch ff
@@ -48,12 +48,12 @@ switch ff
     d.config.error_func = @error_abs;
     %d.config.error_func = @error_real;
     switch gg
-      case 'exact'
-        d.config.gradient_func = @gradient_g_exact;
-      case '1st'
-        d.config.gradient_func = @gradient_g_1st_order;
-      case 'diff'
-        d.config.gradient_func = @gradient_g_finite_diff;
+      case {'eig', 'aux', 'series', 'fd'}
+        d.config.gradient_func = @gradient_g;
+        d.config.dP = gg;
+      case 'mixed'
+        d.config.gradient_func = @gradient_g_mixed_exact;
+        d.config.dP = 'eig';
       otherwise
         error('zzzz')
     end
@@ -61,9 +61,9 @@ switch ff
   case 'tr'
     d.config.error_func = @error_tr;
     switch gg
-      case 'exact'
+      case 'eig'
         d.config.gradient_func = @gradient_tr_exact;
-      case 'diff'
+      case 'fd'
         d.config.gradient_func = @gradient_tr_finite_diff;
       otherwise
         error('zzzz')
@@ -71,16 +71,8 @@ switch ff
 
   case 'full'
     d.config.error_func = @error_full;
-    switch gg
-      case 'exact'
-        d.config.gradient_func = @gradient_full_exact;
-      case '1st'
-        d.config.gradient_func = @gradient_full_1st_order;
-      case 'diff'
-        d.config.gradient_func = @gradient_full_finite_diff;
-      otherwise
-        error('zzzz')
-    end
+    d.config.gradient_func = @gradient_full;
+    d.config.dP = gg;
 
   otherwise
     disp('Keeping the old error function and gradient.')
@@ -95,6 +87,13 @@ mask = d.full_mask(true);
 
 % save the initial controls
 x0 = d.seq.get(mask);
+
+% for flushing out gradient_setup bugs:
+% perturb controls, do/do not recompute entire cache
+x1 = x0 +randn(size(x0));
+d.update_controls(x1, mask);
+%d.cache_fill();  % recompute everything
+
 
 % error function and its gradient at x0
 [err, grad] = d.compute_error(mask);
@@ -120,7 +119,7 @@ for k=1:length(s)
     predicted(k) = err + grad.' * delta;
     
     % f(x0+delta)
-    d.update_controls(x0 + delta, mask);
+    d.update_controls(x1 + delta, mask);
     accurate(k) = d.compute_error();
 end
 

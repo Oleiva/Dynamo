@@ -1,4 +1,4 @@
-function [d] = test_benchmark(d)
+function [t] = test_benchmark(d)
 % Measures the walltime required to compute error functions and gradients.
 %
 %  d is a Dynamo instance containing the optimization problem used.
@@ -16,11 +16,11 @@ end
 
 %% choose an error function and a compatible gradient
 
-ff = 'full'
-gg = 'exact'
+ff = 'g'
+gg = 'aux'
 
 % for the finite_diff methods only
-d.config.epsilon = 1e-3;
+d.config.epsilon = 1e-4;
 
 ttt = ['error\_', ff, ', gradient\_', gg];
 switch ff
@@ -28,12 +28,12 @@ switch ff
     d.config.error_func = @error_abs;
     %d.config.error_func = @error_real;
     switch gg
-      case 'exact'
-        d.config.gradient_func = @gradient_g_exact;
-      case '1st'
-        d.config.gradient_func = @gradient_g_1st_order;
-      case 'diff'
-        d.config.gradient_func = @gradient_g_finite_diff;
+      case {'eig', 'aux', 'series', 'fd'}
+        d.config.gradient_func = @gradient_g;
+        d.config.dP = gg;
+      case 'mixed'
+        d.config.gradient_func = @gradient_g_mixed_exact;
+        d.config.dP = 'eig';
       otherwise
         error('zzzz')
     end
@@ -41,9 +41,9 @@ switch ff
   case 'tr'
     d.config.error_func = @error_tr;
     switch gg
-      case 'exact'
+      case 'eig'
         d.config.gradient_func = @gradient_tr_exact;
-      case 'diff'
+      case 'fd'
         d.config.gradient_func = @gradient_tr_finite_diff;
       otherwise
         error('zzzz')
@@ -51,16 +51,8 @@ switch ff
 
   case 'full'
     d.config.error_func = @error_full;
-    switch gg
-      case 'exact'
-        d.config.gradient_func = @gradient_full_exact;
-      case '1st'
-        d.config.gradient_func = @gradient_full_1st_order;
-      case 'diff'
-        d.config.gradient_func = @gradient_full_finite_diff;
-      otherwise
-        error('zzzz')
-    end
+    d.config.gradient_func = @gradient_full;
+    d.config.dP = gg;
 
   otherwise
     disp('Keeping the old error function and gradient.')
@@ -81,5 +73,5 @@ tic
 for k=1:10
     [err, grad] = d.compute_error(mask);
 end
-toc
+t = toc;
 end

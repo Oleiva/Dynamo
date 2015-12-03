@@ -136,7 +136,7 @@ classdef qsystem < matlab.mixin.Copyable
     end
 
       
-    function hilbert_representation(self, i, f, A, B, use_partial)
+    function hilbert_representation(self, i, f, A, B, gate_partial)
     % X_ are Hilbert space objects (kets or operators).
     % Used for closed system tasks: state, ket, gate, gate_partial, (TODO state_partial).
     % For _partial tasks, i \in SE, f \in S.
@@ -144,7 +144,7 @@ classdef qsystem < matlab.mixin.Copyable
         
         [A, B] = self.common_init(A, B);
         self.X_initial = i;
-        if use_partial
+        if gate_partial
             % only with gate_partial
             self.X_final = kron(f, eye(self.dimSE(2)));
         else

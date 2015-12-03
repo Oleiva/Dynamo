@@ -96,8 +96,12 @@ classdef dynamo < matlab.mixin.Copyable
           case 'abstract'
             %% No transformations done on the A and B operators. 
             % the generator may be anything, hence error_full
-            out = strcat(out, ' abstract');
+            config.dP = 'fd';
+            config.epsilon = 1e-4;
+            config.error_func = @error_full;
+            config.gradient_func = @gradient_full;
             
+            out = strcat(out, ' abstract');
             if strcmp(task_str, 'vector')
                 out = strcat(out, ' vector transfer\n');
                 if any(input_rank ~= 1)
@@ -110,14 +114,13 @@ classdef dynamo < matlab.mixin.Copyable
                 end
             end
             sys.abstract_representation(initial, final, A, B);
-            config.error_func = @error_full;
-            config.gradient_func = @gradient_full_finite_diff;
-            config.epsilon = 1e-4;
-            
-          
+
+
           case {'closed'}
             %% Closed system
             % the generator is always Hermitian and thus normal => use exact gradient
+            config.dP = 'eig';
+
             switch task_str
               case 'state'
                 % TEST more efficient Hilbert space implementation
@@ -154,10 +157,17 @@ classdef dynamo < matlab.mixin.Copyable
                     out = strcat(out, ' (ignoring global phase)');
                     config.error_func = @error_abs;
                 end
-                config.gradient_func = @gradient_g_exact;
+                config.gradient_func = @gradient_g;
 
                 
               % system S + environment E
+              case 'state_partial'
+                out = strcat(out, ' partial mixed state transfer (on S)');
+                sys.hilbert_representation(to_op(initial), to_op(final), A, B, false);
+                config.error_func = @error_full;
+                config.gradient_func = @gradient_full;   FIXME _mixed!
+                config.UL_hack = true;
+
               case 'gate_partial'
                 out = strcat(out, ' partial unitary gate (on S)');
                 if any(input_rank == 1)
@@ -168,19 +178,18 @@ classdef dynamo < matlab.mixin.Copyable
                 config.error_func = @error_tr;
                 config.gradient_func = @gradient_tr_exact;
                 
-              case 'state_partial'
-                error('Not implemented yet.')
-                
               otherwise
                 error('Unknown task.')
             end
-            
             out = strcat(out, ' in a closed system.\n');
 
             
           case {'open'}
             %% Open system with a Markovian bath
             % The generator isn't usually normal, so we cannot use the exact gradient method
+            config.dP = 'aux';
+            config.error_func = @error_full;
+            config.gradient_func = @gradient_full;
 
             switch task_str
               case 'state'
@@ -191,12 +200,10 @@ classdef dynamo < matlab.mixin.Copyable
                     % NOTE simpler error function and gradient, but final state needs to be pure
                     out = strcat(out, ' (overlap)');
                     config.error_func = @error_real;
-                    config.gradient_func = @gradient_g_1st_order;
+                    config.gradient_func = @gradient_g;
                     config.f_max = sys.norm2;
                 else
                     % full distance error function
-                    config.error_func = @error_full;
-                    config.gradient_func = @gradient_full_1st_order;
                 end
                 
               case 'gate'
@@ -205,16 +212,11 @@ classdef dynamo < matlab.mixin.Copyable
                     error('Initial and final states should be unitary operators.')
                 end
                 sys.vec_representation(initial, final, A, B, false);
-                config.error_func = @error_full;
-                config.gradient_func = @gradient_full_1st_order;
-
 
               % system S + environment E
               case 'state_partial'
                 out = strcat(out, ' partial state transfer (on S)');
                 sys.vec_representation(initial, final, A, B, true);
-                config.error_func = @error_full;
-                config.gradient_func = @gradient_full_1st_order;
                 
               case 'gate_partial'
                 error('Not implemented yet.')
@@ -223,7 +225,6 @@ classdef dynamo < matlab.mixin.Copyable
                 % TODO arbitrary quantum maps
                 error('Unknown task.')
             end
-            
             out = strcat(out, ' in an open system under Markovian noise.\n');
 
 
@@ -269,10 +270,7 @@ classdef dynamo < matlab.mixin.Copyable
         end
 
         % exact gradient? we need the eigendecomposition data.
-        temp = self.config.gradient_func;
-        use_eig = isequal(temp, @gradient_g_exact)...
-                  || isequal(temp, @gradient_g_mixed_exact)...
-                  || isequal(temp, @gradient_tr_exact);
+        use_eig = strcmp(self.config.dP, 'eig');
 
         % UL_hack: mixed states in a closed system
         self.cache = cache(self.seq.n_timeslots(), self.system.n_ensemble(), U_start, L_end, use_eig, self.config.UL_hack);

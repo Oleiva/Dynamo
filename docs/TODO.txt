@@ -88,9 +88,6 @@ Random ideas and things to test:
 
 - target = id with relaxation
 
-- S+E, S+E+B: Kosut's paper on non-markovian distance measures:
-  http://arxiv.org/abs/quant-ph/0606064
-
 - When are the controls kind of self-limited? Only if we need to wait
   for H_drift (coupling) to complete the operation?
 
@@ -114,8 +111,6 @@ Random ideas and things to test:
 - Lots of profiling. why do we use almost 30% more time in task1 than Dynamo 1.2? recompute_timeslots is called more?!?
   we seem to need more optimization rounds, maybe sth wrong with the gradient?
 
-- error_abs and error_abs2 seem to give similar performance (as they should) (roughly same N_eval).
-
 - maybe it's not a good idea to normalize the error function with
   |X_f|^2 when doing state transfer since it (being the purity) varies?
 
@@ -129,8 +124,10 @@ Random ideas and things to test:
 
 - problems resulting from using an approximated gradient (incl. finite diff with bad epsilon): breaking symmetries in controls, bad convergence, fake "dynamic" local minima?
 
-- decide what to do with the 1st order gradients, they're awful. see @dynamo/gradient_test.m
-
 - combine similar gradient and error funcs if there is no perfomance loss, merge gradient_setup into gradient funcs themselves.
 
 - open state overlap mode: warn if final state is not pure
+
+- exact full gradient by auxiliary matrix method: use sparse matrices???
+
+- task: k-state transfers (paper by A Spoerl (PRB, 2011))

@@ -10,6 +10,8 @@ b bugfix
               * docs: User manual expanded and updated.
               * dynamo: Stats system can handle several optimization runs.
                 Interrupted runs can be continued automatically.
+              * Gradient system simplified.
+              * Propagator gradients: utils/dPdu_series, utils/dPdu_eig, utils/dPdu_auxmatrix.
               + dynamo/plot_pop, dynamo/plot_eig: New plotting functions.
               + dynamo/shake: Randomly perturbs the control sequence, can be used to get out of local optima.
               + dynamo/split: Refines the control sequence by splitting given bins into several.
@@ -17,4 +19,5 @@ b bugfix
               + test: Unit tests for DYNAMO.
               + test_rand_problem: Generates random optimization problems for testing/benchmarking purposes.
               + test_benchmark: Measures the walltime required to compute different errors and gradients.
-              b dynamo/gradient_setup: gradient_g_mixed_exact provided with wrong *_needed_now
+              b dynamo/gradient_setup: gradient_g_mixed_exact provided with wrong *_needed_now.
+              b dynamo/gradient_g_mixed_exact: gradient with respect to tau was wrong.
