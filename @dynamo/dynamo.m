@@ -162,10 +162,11 @@ classdef dynamo < matlab.mixin.Copyable
                 
               % system S + environment E
               case 'state_partial'
+                error('unfinished, gradient is complicated')
                 out = strcat(out, ' partial mixed state transfer (on S)');
                 sys.hilbert_representation(to_op(initial), to_op(final), A, B, false);
                 config.error_func = @error_full;
-                config.gradient_func = @gradient_full;   FIXME _mixed!
+                config.gradient_func = @gradient_full;
                 config.UL_hack = true;
 
               case 'gate_partial'
@@ -176,7 +177,7 @@ classdef dynamo < matlab.mixin.Copyable
                 sys.hilbert_representation(initial, final, A, B, true);
                 config.f_max = sys.norm2;
                 config.error_func = @error_tr;
-                config.gradient_func = @gradient_tr_exact;
+                config.gradient_func = @gradient_tr;
                 
               otherwise
                 error('Unknown task.')
@@ -187,7 +188,8 @@ classdef dynamo < matlab.mixin.Copyable
           case {'open'}
             %% Open system with a Markovian bath
             % The generator isn't usually normal, so we cannot use the exact gradient method
-            config.dP = 'aux';
+            config.dP = 'fd';
+            config.epsilon = 1e-4;
             config.error_func = @error_full;
             config.gradient_func = @gradient_full;
 

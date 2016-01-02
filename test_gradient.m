@@ -1,8 +1,12 @@
-function [d, direction] = test_gradient(d, direction)
-% Checks if the computed gradient of the error function is accurate.
+function [d, direction] = test_gradient(test, d, direction)
+% Tests the error functions and their gradients.
 %
 %  d is a Dynamo instance containing the optimization problem used.
 %  If no d is given, uses one of the test suite problems.
+%
+%  test == 'time':  Measures the walltime required to compute the error function and gradient.
+%
+%  test == 'acc':  Checks if the computed gradient of the error function is accurate.
 %
 %  Given an error fuction f(\vec{x}), an accurate gradient
 %  evaluated at the point \vec{x0} yields a linearization
@@ -19,30 +23,36 @@ function [d, direction] = test_gradient(d, direction)
 %
 %  1st order approximations turn to O(s) scaling almost immediately
 %  For basic finite difference methods, \vec{grad_error} should be proportional to epsilon.
-    
+
 % Ville Bergholm 2011-2015
 
 
 %randseed(seed);
 
-
 %% set up a system, random controls
 
-if nargin < 1
-    d = test_suite(21);
-    d.easy_control({d.seq.fields, d.seq.tau+0.01*randn(size(d.seq.tau))});
+if nargin < 2
+    switch test
+      case 'acc'
+        d = test_suite(21);
+        d.easy_control({d.seq.fields, d.seq.tau+0.01*randn(size(d.seq.tau))});
+
+      case 'time'
+        d = test_rand_problem('closed gate', 16, 4);
+    end
 end
    
 
 %% choose an error function and a compatible gradient
 
 ff = 'full'
-gg = 'eig'
-
-% for the finite_diff methods only
-d.config.epsilon = 1e-4;
+gg = 'fd'
 
 ttt = ['error\_', ff, ', gradient\_', gg];
+
+% for the finite_diff methods only
+d.config.epsilon = 1e-5;
+d.config.dP = gg;
 switch ff
   case 'g'
     d.config.error_func = @error_abs;
@@ -50,7 +60,6 @@ switch ff
     switch gg
       case {'eig', 'aux', 'series', 'fd'}
         d.config.gradient_func = @gradient_g;
-        d.config.dP = gg;
       case 'mixed'
         d.config.gradient_func = @gradient_g_mixed_exact;
         d.config.dP = 'eig';
@@ -60,19 +69,11 @@ switch ff
 
   case 'tr'
     d.config.error_func = @error_tr;
-    switch gg
-      case 'eig'
-        d.config.gradient_func = @gradient_tr_exact;
-      case 'fd'
-        d.config.gradient_func = @gradient_tr_finite_diff;
-      otherwise
-        error('zzzz')
-    end
+    d.config.gradient_func = @gradient_tr;
 
   case 'full'
     d.config.error_func = @error_full;
     d.config.gradient_func = @gradient_full;
-    d.config.dP = gg;
 
   otherwise
     disp('Keeping the old error function and gradient.')
@@ -80,10 +81,26 @@ switch ff
 end
 
 
-
-%% test the accuracy
-
 mask = d.full_mask(true);
+
+
+switch test
+%% walltime benchmark
+  case 'time'
+
+% save the initial controls
+%x0 = d.seq.get(mask);
+%d.update_controls(x0 + delta, mask);
+
+tic
+for k=1:10
+    [err, grad] = d.compute_error(mask);
+end
+t = toc
+
+
+%% test the gradient accuracy
+  case 'acc'
 
 % save the initial controls
 x0 = d.seq.get(mask);

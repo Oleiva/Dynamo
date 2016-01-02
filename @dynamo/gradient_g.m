@@ -3,7 +3,7 @@ function ret = gradient_g(self, t, k, c)
 % time slice t, ensemble member k, with respect to u_c.
 %
 % g(A,B) = \tr_S(A'*B) is enough to compute the error function
-% E(A,B) whenever |B| is constant. This holds in every closed
+% D(A,B) whenever |B| is constant. This holds in every closed
 % system task except "closed state_partial".
 %
 % Actually returns the gradient times -V*U', for the benefit of E_abs.
@@ -30,8 +30,8 @@ else
         g = trace_matmul(self.cache.L{t+1, k}, P * self.cache.U{t, k});
         %ret = -(self.cache.VUdagger / epsilon) * (g -self.cache.g{k});
         %return
-        E = self.config.f_max -abs(g);
-        %E = self.config.f_max -real(g);
+        E = self.config.f_max -abs(g);  % NOTE only works for error_abs
+        %E = self.config.f_max -real(g);  % NOTE this is for error_real
         ret = (E -self.cache.E) / epsilon;
         return
 
