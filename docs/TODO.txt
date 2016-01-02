@@ -134,3 +134,5 @@ Random ideas and things to test:
 - combine similar gradient and error funcs if there is no perfomance loss, merge gradient_setup into gradient funcs themselves.
 
 - open state overlap mode: warn if final state is not pure
+
+- analytic and piecewise analytic controls: http://arxiv.org/abs/1507.04261
