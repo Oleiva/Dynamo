@@ -1,4 +1,4 @@
-function search_BFGS(self, obj_func, matlab_options)
+function [exitflag, output] = search_BFGS(self, obj_func, matlab_options)
 % BFGS optimization.
 
 % define the optimization problem

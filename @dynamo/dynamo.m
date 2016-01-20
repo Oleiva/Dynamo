@@ -469,6 +469,33 @@ classdef dynamo < matlab.mixin.Copyable
         end
     end
 
+
+    function plot_stats(self, stat, ax)
+    % Plots the optimization stats (like the error) as a function of wall time.
+
+        fp = @plot;
+        switch stat
+          case 'error'
+            fp = @(a,t,x,m) semilogy(a, t, abs(x), m);
+          case 'control_integral'
+          otherwise
+            error('Unknown stat.')
+        end
+
+        offset = 0;
+        for k=1:length(self.stats)
+            temp = getfield(self.stats{k}, stat);
+            fp(ax, self.stats{k}.wall_time+offset, temp, '-');
+            hold(ax, 'on');
+            fp(ax, self.stats{k}.wall_time(end)+offset, temp(end), 'o');
+            offset = offset +self.stats{k}.wall_time(end);
+        end
+        grid(ax, 'on');
+        xlabel(ax, 'wall time (s)')
+        ylabel(ax, stat);
+    end
+
+
     function plot_pop(self, varargin)
     % Plots the evolution of the populations under the current
     % control sequence.

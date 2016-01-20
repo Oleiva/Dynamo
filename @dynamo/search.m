@@ -13,13 +13,9 @@ user_options = struct(varargin{:});
 
 if isempty(control_mask)
     % continue previous optimization (re-use most of the opt struct)
-    self.init_opt();
+    control_mask = self.opt.control_mask;
     % self.opt.control_mask, self.opt.options and self.opt.matlab_options are kept as is
 else
-    % initialization of the optimization data structures
-    self.init_opt();
-    self.opt.control_mask = control_mask;
-
     % default termination conditions and other options
     self.opt.options = struct(...
         'error_goal',        0.5 * (1e-3)^2 / self.system.norm2,...
@@ -30,10 +26,17 @@ else
         'plot_interval',     1);   % how often should we plot intermediate results?
     self.opt.matlab_options = struct();
 end
+% initialization of the optimization data structures
+self.init_opt();
+self.opt.control_mask = control_mask;
+
 % modify self.opt.options with user_options (if any)
 [self.opt.options, unused] = apply_options(self.opt.options, user_options, true);
 % the rest are dumped into matlab_options
 [self.opt.matlab_options] = apply_options(self.opt.matlab_options, unused, false);
+
+
+%% run the optimizer
 
 fprintf('Optimization space dimension: %d\n', sum(sum(self.opt.control_mask)));
 
@@ -41,7 +44,12 @@ fprintf('Optimization space dimension: %d\n', sum(sum(self.opt.control_mask)));
 obj_func = @(x) goal_and_gradient_function_wrapper(self, x);
 
 % run BFGS optimization
-self.search_BFGS(obj_func, self.opt.matlab_options);
+[self.opt.matlab_exitflag, self.opt.matlab_output] = self.search_BFGS(obj_func, self.opt.matlab_options);
+
+
+%% make a copy of the current run's statistics
+
+self.stats{end+1} = self.opt;
 
 term_reason = self.opt.term_reason;
 end

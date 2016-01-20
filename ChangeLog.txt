@@ -10,7 +10,8 @@ b bugfix
               * docs: User manual expanded and updated.
               * dynamo: Stats system can handle several optimization runs.
                 Interrupted runs can be continued automatically.
-              + dynamo/plot_pop, dynamo/plot_eig: New plotting functions.
+              b Always returns the reason why the optimization ended.
+              + dynamo/plot_pop, dynamo/plot_eig, dynamo/plot_stats: New plotting functions.
               + dynamo/shake: Randomly perturbs the control sequence, can be used to get out of local optima.
               + dynamo/split: Refines the control sequence by splitting given bins into several.
               + dynamo/gradient_full_exact: Exact gradient using the auxiliary matrix technique.
