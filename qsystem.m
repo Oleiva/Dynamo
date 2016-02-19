@@ -26,7 +26,7 @@ classdef qsystem < matlab.mixin.Copyable
   methods (Static)
       function ret = is_hermitian(H)
       % Returns true iff H is hermitian
-          ret = (norm(H -H') < 1e-10);
+          ret = (norm(H -H') < 1e-10);  % FIXME magic number
       end
       
       function H = check_hamiltonian(H, message)
@@ -194,7 +194,7 @@ classdef qsystem < matlab.mixin.Copyable
         end
         % TODO it does not make much sense to allow the type of a single
         % control to vary between ensemble members... we should maybe check it here
-        self.B_is_Hamiltonian = all(temp); 
+        self.B_is_Hamiltonian = all(temp, 1);
     end        
 
 

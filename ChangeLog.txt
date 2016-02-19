@@ -20,3 +20,4 @@ b bugfix
               + test_benchmark: Measures the walltime required to compute different errors and gradients.
               + examples/demo_coop_gates
               b dynamo/gradient_setup: gradient_g_mixed_exact provided with wrong *_needed_now.
+              b qsystem.B_is_Hamiltonian was not set up properly, resulting in a spurious warning.
