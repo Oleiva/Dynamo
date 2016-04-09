@@ -41,11 +41,11 @@ mask = [1, 1+2.^(n_sites:-1:0)]; % states to keep: zero, single exciton at each 
 
 %% parameters
 
-qit.c = 299792458;       % speed of light in vacuum, m/s
+c = 299792458;  % speed of light in vacuum, m/s
 
 % The unit for energy is 2 pi hbar c 100/m,
 % and the unit for time (2 pi c 100/m)^{-1} \approx 5.31 ps.
-TU = 1e12 / (2*pi * qit.c * 100) % ps
+TU = 1e12 / (2*pi * c * 100) % ps
 
 if nargin < 1
     % total sequence duration, in ps
