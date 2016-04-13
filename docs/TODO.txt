@@ -63,7 +63,7 @@ TODO list for Dynamo 2
       2. Gradients
            * (GRAPE), (exact, finite diff, 1st order), higher-order series
       3. Optimizers
-           * (L-BFGS, using fminunc), Newton-Raphson, Monotonic Krotov variant?, NM simplex (no gradient needed)
+           * (BFGS native), (BFGS using fminunc), L-BFGS, Newton-Raphson, Monotonic Krotov variant?, NM simplex (no gradient needed)
 
 8. User interface / features
       1. More button-type ui controls for the ui window
@@ -136,3 +136,9 @@ Random ideas and things to test:
 - open state overlap mode: warn if final state is not pure
 
 - analytic and piecewise analytic controls: http://arxiv.org/abs/1507.04261
+
+
+
+- Krylov propagation => aux matrix becomes equivalent to commutator series?
+- Hessian conditioning also for BFGS, get rid of saddle-point related? shelves/plateaus in convergence
+- gpuarray / CUDA, parallelization
