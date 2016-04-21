@@ -224,7 +224,6 @@ dyn = dynamo('open state overlap', initial, final, L_drift, H_ctrl);
 dyn.system.set_labels(desc, st_labels, c_labels);
 
 % use the expensive-but-reliable gradient method
-dyn.config.epsilon = 1e-4;
 dyn.config.gradient_func = @gradient_g_finite_diff;
 
 
@@ -260,13 +259,13 @@ dyn.easy_control(1e-3 * f7_5_plenio, 0.0, 0, false);
 %% now do the actual search
 
 % "before" plot
-figure(); dyn.plot_X(0.001);
+figure(); dyn.plot_pop(0.001);
 
 dyn.ui_open();
 dyn.search();
 
 % "after" plot
-figure(); dyn.plot_X(0.001);
+figure(); dyn.plot_pop(0.001);
 return
 
 

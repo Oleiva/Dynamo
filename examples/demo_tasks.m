@@ -170,5 +170,5 @@ mask = dyn.full_mask(false);
 dyn.ui_open();
 dyn.search(mask);
 %dyn.analyze();
-%figure; dyn.plot_X();
+%figure; dyn.plot_pop();
 end

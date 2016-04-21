@@ -10,6 +10,7 @@ b bugfix
               * docs: User manual expanded and updated.
               * dynamo: Stats system can handle several optimization runs.
                 Interrupted runs can be continued automatically.
+              * Implemented various recommendations from Nocedal-Wright.
               + utils/bfgs: Native implementation of the BFGS optimization algorithm.
               + utils/apply_options: MATLAB-style options processing.
               + dynamo/plot_pop, dynamo/plot_eig, dynamo/plot_stats: New plotting functions.

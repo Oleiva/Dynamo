@@ -79,7 +79,8 @@ classdef dynamo < matlab.mixin.Copyable
         
         config.task = task;
         config.UL_hack = false;
-        
+        config.epsilon = 2e-8;  % finite differencing: approximately sqrt(eps(double))
+
         [system_str, rem] = strtok(task);
         [task_str, rem] = strtok(rem);
         [extra_str, rem] = strtok(rem);
@@ -112,9 +113,8 @@ classdef dynamo < matlab.mixin.Copyable
             sys.abstract_representation(initial, final, A, B);
             config.error_func = @error_full;
             config.gradient_func = @gradient_full_finite_diff;
-            config.epsilon = 1e-4;
-            
-          
+
+
           case {'closed'}
             %% Closed system
             % the generator is always Hermitian and thus normal => use exact gradient

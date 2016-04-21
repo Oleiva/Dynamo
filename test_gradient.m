@@ -20,7 +20,7 @@ function [d, direction] = test_gradient(d, direction)
 %  1st order approximations turn to O(s) scaling almost immediately
 %  For basic finite difference methods, \vec{grad_error} should be proportional to epsilon.
     
-% Ville Bergholm 2011-2015
+% Ville Bergholm 2011-2016
 
 
 %randseed(seed);
@@ -40,9 +40,8 @@ ff = 'full'
 gg = 'exact'
 
 % for the finite_diff methods only
-d.config.epsilon = 1e-3;
+%d.config.epsilon = 1e-3;
 
-ttt = ['error\_', ff, ', gradient\_', gg];
 switch ff
   case 'g'
     d.config.error_func = @error_abs;
@@ -87,6 +86,12 @@ switch ff
     ttt = '';
 end
 
+switch gg
+  case 'diff'
+    gg = sprintf('%s, epsilon = %g', gg, d.config.epsilon);
+end
+
+ttt = ['error\_', ff, ', gradient\_', gg];
 
 
 %% test the accuracy
@@ -109,7 +114,7 @@ elseif isempty(direction)
 end
 direction = direction / norm(direction);
     
-s = logspace(0, -6, 30);
+s = logspace(0, -10, 40);
 diff = [];
 predicted = [];
 accurate = [];
@@ -140,6 +145,7 @@ subplot(1,2,1)
 loglog(s, diff, 'b-o', s, s.^2, 'r', s, s, 'g');
 xlabel('|\Delta x|')
 ylabel('|error|')
+grid on
 legend('gradient error', 'quadratic', 'linear')
 title(ttt)
 
@@ -147,6 +153,7 @@ subplot(1,2,2)
 semilogx(s, predicted, 'b-o', s, accurate, 'r-o');
 xlabel('|\Delta x|')
 ylabel('f(x)')
+grid on
 legend('predicted', 'accurate');
 title(ttt)
 end

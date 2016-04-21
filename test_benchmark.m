@@ -20,7 +20,7 @@ ff = 'full'
 gg = 'exact'
 
 % for the finite_diff methods only
-d.config.epsilon = 1e-3;
+%d.config.epsilon = 1e-3;
 
 ttt = ['error\_', ff, ', gradient\_', gg];
 switch ff
