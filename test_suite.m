@@ -134,7 +134,7 @@ timeslots = [30, 40, 128, 64, 120, 140, 128, 128, 64, 300, 300, 64,...
 T = [2, 2, 3, 4, 6, 7, 10, 12, 20, 15, 20, 25,...
      7, 12, 2, 5, 125, 150, 30, 15, 40, 15, 5, 2];
 
-dyn.seq_init(timeslots(p), T(p) * [0.5, 1.5]);
+dyn.seq_init(timeslots(p), T(p) * [0.5, 1.0]);
 
 % Set up random initial controls.
 dyn.easy_control([]);

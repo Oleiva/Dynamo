@@ -224,8 +224,8 @@ dyn = dynamo('open state overlap', initial, final, L_drift, H_ctrl);
 dyn.system.set_labels(desc, st_labels, c_labels);
 
 % use the expensive-but-reliable gradient method
-dyn.config.epsilon = 1e-4;
-dyn.config.gradient_func = @gradient_g_finite_diff;
+dyn.config.epsilon = 1e-7;
+dyn.config.dP = 'fd';
 
 
 %% set up controls

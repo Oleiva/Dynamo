@@ -24,7 +24,7 @@ function [d, direction] = test_gradient(test, d, direction)
 %  1st order approximations turn to O(s) scaling almost immediately
 %  For basic finite difference methods, \vec{grad_error} should be proportional to epsilon.
 
-% Ville Bergholm 2011-2015
+% Ville Bergholm 2011-2016
 
 
 %randseed(seed);
@@ -34,7 +34,7 @@ function [d, direction] = test_gradient(test, d, direction)
 if nargin < 2
     switch test
       case 'acc'
-        d = test_suite(24);
+        d = test_suite(21);
         d.easy_control({d.seq.fields, d.seq.tau+0.01*randn(size(d.seq.tau))});
         
       case 'time'
@@ -47,34 +47,29 @@ end
 
 ff = 'full'
 gg = 'fd'
-%gg = 'series_ss'
 
 ttt = ['error\_', ff, ', gradient\_', gg];
 
 % for the finite_diff methods only
 d.config.epsilon = 1e-7;
+d.config.UL_mixed = false;
+
 d.config.dP = gg;
 switch ff
-  case 'g'
+  case 'abs'
     d.config.error_func = @error_abs;
-    %d.config.error_func = @error_real;
-    switch gg
-      case {'eig', 'aux', 'series', 'fd'}
-        d.config.gradient_func = @gradient_g;
-      case 'mixed'
-        d.config.gradient_func = @gradient_g_mixed_exact;
-        d.config.dP = 'eig';
-      otherwise
-        error('zzzz')
-    end
+    d.config.nonprojective_error = false;
+
+  case 'real'
+    d.config.error_func = @error_abs;
+    d.config.nonprojective_error = true;
+    %d.config.UL_mixed = true;  % requires a task with mixed initial/final states
 
   case 'tr'
     d.config.error_func = @error_tr;
-    d.config.gradient_func = @gradient_tr;
 
   case 'full'
     d.config.error_func = @error_full;
-    d.config.gradient_func = @gradient_full;
 
   otherwise
     disp('Keeping the old error function and gradient.')
@@ -84,7 +79,7 @@ end
 % required after changing error/gradient func
 d.cache_init()
 
-
+% full gradient, including tau
 mask = d.full_mask(true);
 
 

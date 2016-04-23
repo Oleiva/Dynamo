@@ -16,7 +16,7 @@ classdef cache < matlab.mixin.Copyable
 
       H_v           % eigendecomposition data for dt*H, updated when P is updated  
       H_eig_factor  % likewise
-      W  % TEST, scaling and squaring, W{t, ens} = {A, A^2, A^4..., P}
+      W             % TEST, scaling and squaring, W{t, ens} = {A, A^2, A^4...}
       
       %% cell array: g{ensemble_index}
       g  % trace_q(L{k} * U{k}), where q is S or E depending on the error function used.
@@ -30,7 +30,7 @@ classdef cache < matlab.mixin.Copyable
       g_needed_now  % scalar
       
       E        = NaN  % gradient_*_finite_diff: cached error
-      VUdagger = NaN  % cached SVD data for error_tr, error_abs (also used by error_real) 
+      VUdagger = NaN  % cached SVD data for error_tr, error_abs
       int  = []   % TEST, integrator
   end
 
@@ -248,7 +248,7 @@ classdef cache < matlab.mixin.Copyable
                   self.g{k} = partial_trace(temp, sys.dimSE, 2);
               
               elseif sys.dimSE(2) == 1
-                  % error_abs, error_real, no environment E, full trace, g is a scalar
+                  % error_abs, no environment E, full trace, g is a scalar
                   self.g{k} = trace_matmul(self.L{g_ind, k}, self.U{g_ind, k});
               
               else

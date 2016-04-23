@@ -19,7 +19,12 @@ switch self.config.dP
     c_slot_mask   = any(control_mask(:, 1:end-1), 2);
     u_slot_mask = [c_slot_mask; false] | [false; tau_slot_mask];
     
-    % P_{c_slot} is required by eig and fd(at P).
+    % P_{c_slot} is required by eig, series_ss and fd_dp
+    % TODO not by aux, fd?
     self.cache.P_needed_now(c_slot_mask) = true;  % P_{c_slot}, for H_v and H_eig_factor
     self.cache.U_needed_now(u_slot_mask) = true;  % U_{c_slot},  U_{tau_slot+1}
+end
+
+if self.config.UL_mixed
+    self.cache.U_needed_now([false; slot_mask]) = true;
 end

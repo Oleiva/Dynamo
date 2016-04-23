@@ -8,7 +8,7 @@ classdef dynamo < matlab.mixin.Copyable
 % Governing equation: \dot(X)(t) = (A +\sum_k u_k(t) B_k) X(t) = G(t) X(t)
     
 % Shai Machnes   2010-2011
-% Ville Bergholm 2011-2015
+% Ville Bergholm 2011-2016
 
 
   properties
@@ -78,7 +78,8 @@ classdef dynamo < matlab.mixin.Copyable
         config.date_UTC = datestr(temp, 31);
         
         config.task = task;
-        config.UL_hack = false;
+        config.nonprojective_error = false;
+        config.UL_mixed = false;  % HACK: mixed states in a closed system
         
         [system_str, rem] = strtok(task);
         [task_str, rem] = strtok(rem);
@@ -99,7 +100,6 @@ classdef dynamo < matlab.mixin.Copyable
             config.dP = 'fd';
             config.epsilon = 1e-4;
             config.error_func = @error_full;
-            config.gradient_func = @gradient_full;
             
             out = strcat(out, ' abstract');
             if strcmp(task_str, 'vector')
@@ -129,12 +129,11 @@ classdef dynamo < matlab.mixin.Copyable
                     error('Either the initial or the final state should be a state operator.')
                 end
                 sys.hilbert_representation(to_op(initial), to_op(final), A, B, false);
+                config.error_func = @error_abs;
+                config.nonprojective_error = true;
                 config.f_max = (sys.norm2 +norm2(sys.X_initial)) / 2;
-                config.error_func = @error_real;
-                config.gradient_func = @gradient_g_mixed_exact;
-                config.UL_hack = true;
-                
-              
+                config.UL_mixed = true;
+
               case {'ket', 'gate'}
                 if strcmp(task_str, 'ket')
                     out = strcat(out, ' pure state transfer');
@@ -152,13 +151,11 @@ classdef dynamo < matlab.mixin.Copyable
 
                 if strcmp(extra_str, 'phase')
                     out = strcat(out, ' (with global phase (NOTE: unphysical!))');
-                    config.error_func = @error_real;
+                    config.nonprojective_error = true;
                 else
                     out = strcat(out, ' (ignoring global phase)');
-                    config.error_func = @error_abs;
                 end
-                config.gradient_func = @gradient_g;
-
+                config.error_func = @error_abs;
                 
               % system S + environment E
               case 'state_partial'
@@ -166,8 +163,7 @@ classdef dynamo < matlab.mixin.Copyable
                 out = strcat(out, ' partial mixed state transfer (on S)');
                 sys.hilbert_representation(to_op(initial), to_op(final), A, B, false);
                 config.error_func = @error_full;
-                config.gradient_func = @gradient_full;
-                config.UL_hack = true;
+                config.UL_mixed = true;
 
               case 'gate_partial'
                 out = strcat(out, ' partial unitary gate (on S)');
@@ -177,7 +173,6 @@ classdef dynamo < matlab.mixin.Copyable
                 sys.hilbert_representation(initial, final, A, B, true);
                 config.f_max = sys.norm2;
                 config.error_func = @error_tr;
-                config.gradient_func = @gradient_tr;
                 
               otherwise
                 error('Unknown task.')
@@ -191,7 +186,6 @@ classdef dynamo < matlab.mixin.Copyable
             config.dP = 'fd';
             config.epsilon = 1e-4;
             config.error_func = @error_full;
-            config.gradient_func = @gradient_full;
 
             switch task_str
               case 'state'
@@ -201,8 +195,8 @@ classdef dynamo < matlab.mixin.Copyable
                     % overlap error function
                     % NOTE simpler error function and gradient, but final state needs to be pure
                     out = strcat(out, ' (overlap)');
-                    config.error_func = @error_real;
-                    config.gradient_func = @gradient_g;
+                    config.error_func = @error_abs;
+                    config.nonprojective_error = true;
                     config.f_max = sys.norm2;
                 else
                     % full distance error function
@@ -271,8 +265,8 @@ classdef dynamo < matlab.mixin.Copyable
             L_end = self.system.X_final'; % L: X_final' propagated backwards
         end
 
-        % UL_hack: mixed states in a closed system
-        self.cache = cache(self.seq.n_timeslots(), self.system.n_ensemble(), U_start, L_end, self.config.dP, self.config.UL_hack);
+        % UL_mixed: mixed states in a closed system
+        self.cache = cache(self.seq.n_timeslots(), self.system.n_ensemble(), U_start, L_end, self.config.dP, self.config.UL_mixed);
     end
 
 
@@ -369,10 +363,10 @@ classdef dynamo < matlab.mixin.Copyable
                 if c == tau_c
                     c = -1; % denotes a tau control
                 end
-                grad(z) = self.config.gradient_func(self, t, k, c);
+                grad(z) = self.config.error_func(self, k, t, c);
             end
             % real, normalized, weighted gradient
-            grad_out = grad_out +(self.system.weight(k) / self.system.norm2) * real(grad);
+            grad_out = grad_out +(self.system.weight(k) / self.system.norm2) * grad;
         end
         %fprintf('Error: %g\n', err_out);
     end

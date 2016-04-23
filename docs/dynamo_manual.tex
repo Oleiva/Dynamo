@@ -959,8 +959,10 @@ The gradients ($A$ is always constant) are
 = -\frac{1}{\|A\|^2} \re \tr \left(V \Sigma^{-1} \Sigma W^\dagger \dd{g}{u}\right),\\
 \dd{g(A, B)}{u} &= \tr(X_f^\dagger \Lambda_{k} \left(\dd{P_k}{u}\right) \spr_{k-1} X_i)
 = \tr(L_{k+1} \left(\dd{P_k}{u}\right) U_{k}),\\
+\notag
 \dd{g(Y_f, Y_n)}{u} &= 2 \re \tr\left(\Lambda_k^\dagger Y_f^\dagger \Lambda_k \left(\dd{P_k}{u}\right) \spr_{k-1} Y_i \spr_{k-1}^\dagger P_k^\dagger \right)
-= 2 \re \tr\left(L_{k+1} \left(\dd{P_k}{u}\right) U_{k} P_k^\dagger \right), \quad \text{and}\\
+= 2 \re \tr\left(L_{k+1} \left(\dd{P_k}{u}\right) U_{k} P_k^\dagger \right)\\
+&= 2 \re \tr\left(L_{k+1} \left(\dd{P_k}{u}\right) P_k^\dagger U_{k+1} \right), \quad \text{and}\\
 \notag
 \dd{E_\text{full}(A, B)}{u}
 &= \frac{1}{\|A\|^2} \re \tr\left((\tr_E(B)-A)^\dagger \dd{\tr_E(B)}{u}\right)

@@ -61,9 +61,9 @@ TODO list for Dynamo 2
       1. "Integrators"
            * (expm), (eigendecomposition), expv, ode solvers (for time-dependent H:s and H_c:s), t-DMRG, Taylor
       2. Gradients
-           * (GRAPE), (exact, finite diff, 1st order), higher-order series
+           * (GRAPE), (eigendecomposition, finite diff, Taylor series (with scaling and squaring), auxiliary matrix)
       3. Optimizers
-           * (L-BFGS, using fminunc), Newton-Raphson, Monotonic Krotov variant?, NM simplex (no gradient needed)
+           * (BFGS using fminunc, BFGS), L-BFGS, Newton-Raphson, Monotonic Krotov variant?, NM simplex (no gradient needed)
 
 8. User interface / features
       1. More button-type ui controls for the ui window
@@ -91,17 +91,13 @@ Random ideas and things to test:
 - When are the controls kind of self-limited? Only if we need to wait
   for H_drift (coupling) to complete the operation?
 
-- UI: monitor_func is not called reliably, thus optimization does not always
-  terminate when trying to close the UI window
-
 - express a state transfer problem in a Hermitian basis => real
   vectors and matrices instead of complex ones, faster...
 
 - consistent function interface: dim as first or second parameter?
 
-- Module for nth-degree gradient approximation with repeated scaling
-  and squaring: Fouquieres et al., J. Magn. Reson. 212, 412 (2011).
-  Automatic choice of \epsilon for finite-difference gradient method, ibid.
+- Automatic choice of \epsilon for finite-difference gradient method,
+  Fouquieres et al., J. Magn. Reson. 212, 412 (2011).
 
 - performance-compare error_full and the approximation given by error_real
 
@@ -114,10 +110,6 @@ Random ideas and things to test:
 - maybe it's not a good idea to normalize the error function with
   |X_f|^2 when doing state transfer since it (being the purity) varies?
 
-- check that the chosen gradient func matches with the error func!
-
-- fix the 'none yet' term reason when fminunc decides to terminate on its own
-
 - make setting control bounds/params easier/more automated
 
 - make sure that (printed) error function values are (1) somehow physical, (2) same/comparable between all optimization tasks
@@ -128,6 +120,8 @@ Random ideas and things to test:
 
 - open state overlap mode: warn if final state is not pure
 
-- exact full gradient by auxiliary matrix method: use sparse matrices???
+- exact full gradient by auxiliary matrix method: use sparse matrices, or Krylov subspace methods???
 
 - task: k-state transfers (paper by A Spoerl (PRB, 2011))
+
+- task: gates within subspaces/diagonal blocks, with arbitrary relative phases, or ignoring one subspace entirely
