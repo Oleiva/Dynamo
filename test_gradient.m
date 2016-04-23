@@ -48,11 +48,16 @@ end
 ff = 'full'
 gg = 'fd'
 
+d.config.epsilon  = 2e-8;
+d.config.UL_mixed = false;
+
 ttt = ['error\_', ff, ', gradient\_', gg];
 
-% for the finite_diff methods only
-d.config.epsilon = 1e-7;
-d.config.UL_mixed = false;
+switch gg
+  case 'fd'
+    ttt = sprintf('%s, epsilon = %g', ttt, d.config.epsilon);
+end
+
 
 d.config.dP = gg;
 switch ff
@@ -154,6 +159,7 @@ subplot(1,2,1)
 loglog(s, diff, 'b-o', s, s.^2, 'r', s, s, 'g');
 xlabel('|\Delta x|')
 ylabel('|error|')
+grid on
 legend('gradient error', 'quadratic', 'linear')
 title(ttt)
 
@@ -161,6 +167,7 @@ subplot(1,2,2)
 semilogx(s, predicted, 'b-o', s, accurate, 'r-o');
 xlabel('|\Delta x|')
 ylabel('f(x)')
+grid on
 legend('predicted', 'accurate');
 title(ttt)
 end

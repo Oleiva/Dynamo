@@ -79,8 +79,9 @@ classdef dynamo < matlab.mixin.Copyable
         
         config.task = task;
         config.nonprojective_error = false;
+        config.epsilon  = 2e-8;   % finite differencing: approximately sqrt(eps(double))
         config.UL_mixed = false;  % HACK: mixed states in a closed system
-        
+
         [system_str, rem] = strtok(task);
         [task_str, rem] = strtok(rem);
         [extra_str, rem] = strtok(rem);
@@ -98,7 +99,6 @@ classdef dynamo < matlab.mixin.Copyable
             %% No transformations done on the A and B operators. 
             % the generator may be anything, hence error_full
             config.dP = 'fd';
-            config.epsilon = 1e-4;
             config.error_func = @error_full;
             
             out = strcat(out, ' abstract');
@@ -120,6 +120,7 @@ classdef dynamo < matlab.mixin.Copyable
             %% Closed system
             % the generator is always Hermitian and thus normal => use exact gradient
             config.dP = 'eig';
+            config.error_func = @error_abs;
 
             switch task_str
               case 'state'
@@ -129,10 +130,9 @@ classdef dynamo < matlab.mixin.Copyable
                     error('Either the initial or the final state should be a state operator.')
                 end
                 sys.hilbert_representation(to_op(initial), to_op(final), A, B, false);
-                config.error_func = @error_abs;
+                config.UL_mixed = true;
                 config.nonprojective_error = true;
                 config.f_max = (sys.norm2 +norm2(sys.X_initial)) / 2;
-                config.UL_mixed = true;
 
               case {'ket', 'gate'}
                 if strcmp(task_str, 'ket')
@@ -148,14 +148,12 @@ classdef dynamo < matlab.mixin.Copyable
                 end
                 sys.hilbert_representation(initial, final, A, B, false);
                 config.f_max = sys.norm2;
-
                 if strcmp(extra_str, 'phase')
                     out = strcat(out, ' (with global phase (NOTE: unphysical!))');
                     config.nonprojective_error = true;
                 else
                     out = strcat(out, ' (ignoring global phase)');
                 end
-                config.error_func = @error_abs;
                 
               % system S + environment E
               case 'state_partial'
@@ -184,7 +182,6 @@ classdef dynamo < matlab.mixin.Copyable
             %% Open system with a Markovian bath
             % The generator isn't usually normal, so we cannot use the exact gradient method
             config.dP = 'fd';
-            config.epsilon = 1e-4;
             config.error_func = @error_full;
 
             switch task_str
@@ -459,6 +456,33 @@ classdef dynamo < matlab.mixin.Copyable
             xlabel(ax, sprintf('time (%g s)', self.system.TU));
         end
     end
+
+
+    function plot_stats(self, stat, ax)
+    % Plots the optimization stats (like the error) as a function of wall time.
+
+        fp = @plot;
+        switch stat
+          case 'error'
+            fp = @(a,t,x,m) semilogy(a, t, abs(x), m);
+          case 'control_integral'
+          otherwise
+            error('Unknown stat.')
+        end
+
+        offset = 0;
+        for k=1:length(self.stats)
+            temp = getfield(self.stats{k}, stat);
+            fp(ax, self.stats{k}.wall_time+offset, temp, '-');
+            hold(ax, 'on');
+            fp(ax, self.stats{k}.wall_time(end)+offset, temp(end), 'o');
+            offset = offset +self.stats{k}.wall_time(end);
+        end
+        grid(ax, 'on');
+        xlabel(ax, 'wall time (s)')
+        ylabel(ax, stat);
+    end
+
 
     function plot_pop(self, varargin)
     % Plots the evolution of the populations under the current

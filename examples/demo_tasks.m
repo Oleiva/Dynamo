@@ -84,8 +84,8 @@ end
 %% Choose the task
 % The initial and final states depend on the optimization task.
 
-initial = [1; 0; 0; 0];
-final = [0; 0; 0; 1];
+initial = zeros(D,1);  initial(1) = 1;
+final = zeros(D,1);  final(end) = 1;
 
 switch task
   case {'closed ket', 'closed ket phase'}
@@ -95,19 +95,19 @@ switch task
   case 'closed state'
     % mixed state transfer
     a = 0.6;
-    initial = a * initial * initial' +(1-a) * eye(4) / 4
+    initial = a * initial * initial' +(1-a) * eye(D) / D;
     T = 0.72;
     
-  case 'closed state_partial'
-    % first qubit to |1>
-    final = [0; 1];
-    T = 0.59;
-
   case {'closed gate', 'closed gate phase'}
     % QFT gate
     initial = eye(D);
     final = qft(q);
     T = 1.6;
+
+  case 'closed state_partial'
+    % first qubit to |1>
+    final = [0; 1];
+    T = 0.59;
 
   case 'closed gate_partial'
     % partial QFT gate
@@ -118,15 +118,15 @@ switch task
   case {'open state', 'open state overlap'}
     T = 1;
     
-  case 'open state_partial'
-    % first qubit to |1>
-    final = [0; 1];
-    T = 0.59;
-
   case 'open gate'
     initial = eye(D);
     final = qft(q);
     T = 1.8;
+
+  case 'open state_partial'
+    % first qubit to |1>
+    final = [0; 1];
+    T = 0.59;
 
   case 'open gate_partial'
     % partial QFT gate
@@ -170,5 +170,5 @@ mask = dyn.full_mask(false);
 dyn.ui_open();
 dyn.search(mask);
 %dyn.analyze();
-%figure; dyn.plot_X();
+%figure; dyn.plot_pop();
 end

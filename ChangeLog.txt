@@ -8,7 +8,7 @@ b bugfix
 
 1.4.0       in progress
               * docs: User manual expanded and updated.
-              * dynamo: Stats system can handle several optimization runs.
+              * Stats system can handle several optimization runs.
                 Interrupted runs can be continued automatically.
               * Gradient system simplified. Added gradients using a truncated Taylor series
                 with scaling and squaring, and the auxiliary matrix technique.
@@ -19,11 +19,17 @@ b bugfix
               - dynamo/gradient_g
               - dynamo/gradient_g_mixed_exact
               - dynamo/gradient_tr
-              + dynamo/plot_pop, dynamo/plot_eig: New plotting functions.
+              * Implemented various recommendations from Nocedal-Wright.
+              + utils/bfgs: Native implementation of the BFGS optimization algorithm.
+              + utils/apply_options: MATLAB-style options processing.
+              + dynamo/plot_pop, dynamo/plot_eig, dynamo/plot_stats: New plotting functions.
               + dynamo/shake: Randomly perturbs the control sequence, can be used to get out of local optima.
               + dynamo/split: Refines the control sequence by splitting given bins into several.
               + test: Unit tests for DYNAMO.
               + test_rand_problem: Generates random optimization problems for testing/benchmarking purposes.
               + test_benchmark: Measures the walltime required to compute different errors and gradients.
+              + examples/demo_coop_gates
+              b Always returns the reason why the optimization ended.
               b dynamo/gradient_setup: gradient_g_mixed_exact provided with wrong *_needed_now.
               b dynamo/gradient_g_mixed_exact: gradient with respect to tau was wrong.
+              b qsystem.B_is_Hamiltonian was not set up properly, resulting in a spurious warning.

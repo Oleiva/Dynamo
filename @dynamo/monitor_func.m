@@ -65,10 +65,4 @@ self.opt.error(end+1) = optimValues.fval;
 self.opt.wall_time(end+1) = wt;
 self.opt.cpu_time(end+1)  = ct;
 self.opt.control_integral(end+1,:) = self.seq.integral();
-
-
-%% make a copy of the current run's statistics
-if stop
-    self.stats{end+1} = self.opt;
-end
 end

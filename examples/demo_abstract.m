@@ -68,5 +68,5 @@ dyn.easy_control(randn(1,2));
 dyn.ui_open();
 dyn.search();
 %dyn.analyze();
-%figure; dyn.plot_X();
+%figure; dyn.plot_pop();
 %figure; dyn.plot_seq();
