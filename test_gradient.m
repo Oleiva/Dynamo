@@ -34,9 +34,9 @@ function [d, direction] = test_gradient(test, d, direction)
 if nargin < 2
     switch test
       case 'acc'
-        d = test_suite(21);
+        d = test_suite(24);
         d.easy_control({d.seq.fields, d.seq.tau+0.01*randn(size(d.seq.tau))});
-
+        
       case 'time'
         d = test_rand_problem('closed gate', 16, 4);
     end
@@ -47,11 +47,12 @@ end
 
 ff = 'full'
 gg = 'fd'
+%gg = 'series_ss'
 
 ttt = ['error\_', ff, ', gradient\_', gg];
 
 % for the finite_diff methods only
-d.config.epsilon = 1e-5;
+d.config.epsilon = 1e-7;
 d.config.dP = gg;
 switch ff
   case 'g'
@@ -80,6 +81,9 @@ switch ff
     ttt = '';
 end
 
+% required after changing error/gradient func
+d.cache_init()
+
 
 mask = d.full_mask(true);
 
@@ -102,20 +106,19 @@ t = toc
 %% test the gradient accuracy
   case 'acc'
 
-% save the initial controls
-x0 = d.seq.get(mask);
-
 % for flushing out gradient_setup bugs:
 % perturb controls, do/do not recompute entire cache
-x1 = x0 +randn(size(x0));
-d.update_controls(x1, mask);
+%x1 = x0 +randn(size(x0));
+%d.update_controls(x1, mask);
 %d.cache_fill();  % recompute everything
 
+% save the initial controls
+x0 = d.seq.get(mask);
 
 % error function and its gradient at x0
 [err, grad] = d.compute_error(mask);
 
-if nargin < 2
+if nargin < 3
     % random unit direction in parameter space
     direction = randn(size(x0));
 
@@ -125,7 +128,7 @@ elseif isempty(direction)
 end
 direction = direction / norm(direction);
     
-s = logspace(0, -6, 30);
+s = logspace(0, -10, 40);
 diff = [];
 predicted = [];
 accurate = [];
@@ -136,7 +139,7 @@ for k=1:length(s)
     predicted(k) = err + grad.' * delta;
     
     % f(x0+delta)
-    d.update_controls(x1 + delta, mask);
+    d.update_controls(x0 + delta, mask);
     accurate(k) = d.compute_error();
 end
 

@@ -2,7 +2,7 @@ classdef cache < matlab.mixin.Copyable
 % Copyable handle class for doing the heavy computing and storing the results.
 
 % Shai Machnes   2010-2011
-% Ville Bergholm 2011-2013
+% Ville Bergholm 2011-2016
     
 
   properties (SetAccess = private)
@@ -16,6 +16,7 @@ classdef cache < matlab.mixin.Copyable
 
       H_v           % eigendecomposition data for dt*H, updated when P is updated  
       H_eig_factor  % likewise
+      W  % TEST, scaling and squaring, W{t, ens} = {A, A^2, A^4..., P}
       
       %% cell array: g{ensemble_index}
       g  % trace_q(L{k} * U{k}), where q is S or E depending on the error function used.
@@ -45,19 +46,24 @@ classdef cache < matlab.mixin.Copyable
   end
 
   methods
-      function self = cache(n_timeslots, n_ensemble, U_start, L_end, use_eig, UL_hack)
+      function self = cache(n_timeslots, n_ensemble, U_start, L_end, dP_method, UL_hack)
       % Set up caching (once we know the number of time slices and U and L endpoints).
 
           s_time     = [1, n_timeslots];
           s_ensemble = [1, n_ensemble];
           s_full     = [n_timeslots, n_ensemble];
-          
-          if use_eig
-              % Store the eigendecomposition data as well
+
+          switch dP_method
+            case 'eig'
+              % Exact gradient using eigendecomposition? Store the eigendecomposition data.
               self.H_v          = cell(s_full);
               self.H_eig_factor = cell(s_full);
               self.calcPfromHfunc = @calcP_expm_exact_gradient;
-          else
+            case 'series_ss'
+              % Taylor series with scaling and squaring: store the squares.
+              self.W = cell(s_full);
+              self.calcPfromHfunc = @calcP_expm_scaling_and_squaring;
+            otherwise
               self.calcPfromHfunc = @calcP_expm;
           end
           self.UL_mixed = UL_hack;
@@ -294,6 +300,23 @@ classdef cache < matlab.mixin.Copyable
           ret = v * diag(exp_d) * v';
       end
 
+      function P = calcP_expm_scaling_and_squaring(self, t, k, dt)
+      % Computes P{t, k} using expm with scaling and squaring,
+      % stores the intermediate powers for computing the
+      % derivatives later on.
+
+          s = abs(dt) * norm(self.H{t, k}, 1);  % 1-norm is easy to compute
+          n = max(0, ceil(log2(s)));            % number of squarings
+          gtau = self.H{t, k} * (dt / 2^n);     % scaling
+          W = cell(1,n);
+          P = expm(gtau);  % first power
+          for r=1:n
+              % store the current power, then square it
+              W{r} = P;
+              P = P * P; % This seems faster than P^2. Argh.
+          end
+          self.W{t, k} = W;  % store the powers of gtau
+      end
 
       function ret = calcP_expm(self, t, k, dt)
       % Computes P{t, k} using expm.

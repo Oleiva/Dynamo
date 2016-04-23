@@ -305,11 +305,29 @@ more terms from the series in Eq.~\eqref{eq:dPdu_commseries}.
 The downside is that we must keep track of~$\|G\|$ and adjust the
 slice duration~$\tau$ accordingly.
 
-Another option is the scaling and squaring method~\cite{}, in which
-one writes the propagator as
-$P = e^{\tau G} = \left(e^{\tau G/2^n}\right)^{2^n}$.
-Here $n$~is the number of squarings, chosen such that
-$\|\tau G\|/2^n \in [0,1]$.
+Another option is the scaling and squaring method~\cite{Higham2009}.
+First one computes
+$n = \lceil \log_2 \|\tau G\|\rceil$,
+and sets $s = 2^n$.
+This guarantees that
+$\|\tau G/s\| \in [0,1]$,
+which means that
+$P' := e^{\tau G/s}$
+can be computed using a quickly converging Taylor series expansion.
+Now the propagator can be written in the form
+\be
+P = \left(e^{\tau G/s}\right)^{s} = P'^{(2^n)},
+\ee
+i.e. $P'$ squared $n$~times.
+The partial derivatives can be computed using the iterated chain rule,
+\be
+\dd{P}{u_{c}}
+= \dd{}{u_{c}} P'^{(2^{n})}
+= \left(\dd{}{u_{c}} P'^{(2^{n-1})}\right) P'^{(2^{n-1})} +P'^{(2^{n-1})} \left(\dd{}{u_{c}} P'^{(2^{n-1})}\right),
+\ee
+all the way down to
+$\dd{}{u_{c}} P'$
+which is computed using Eq.~\eqref{eq:dPdu_commseries}.
 
 
 \subsubsection{Normal generators}
@@ -946,8 +964,8 @@ The gradients ($A$ is always constant) are
 \notag
 \dd{E_\text{full}(A, B)}{u}
 &= \frac{1}{\|A\|^2} \re \tr\left((\tr_E(B)-A)^\dagger \dd{\tr_E(B)}{u}\right)
-= \frac{1}{\|X_f\|^2} \re \tr\left((\tr_E(\Lambda_k \spr_k X_i) -X_f)^\dagger  \tr_E(\Lambda_{k} \left(\dd{P_k}{u}\right) \spr_{k-1} X_i) \right)\\
-&= \frac{1}{\|X_f\|^2} \re \tr\left((\tr_E(L_{k+1} U_{k+1}) -X_f)^\dagger  \tr_E(L_{k+1} \left(\dd{P_k}{u}\right) U_{k}) \right).
+= \frac{1}{\|X_f\|^2} \re \tr\left((g -X_f)^\dagger  \tr_E(\Lambda_{k} \left(\dd{P_k}{u}\right) \spr_{k-1} X_i) \right)\\
+&= \frac{1}{\|X_f\|^2} \re \tr\left((g -X_f)^\dagger  \tr_E(L_{k+1} \left(\dd{P_k}{u}\right) U_{k}) \right).
 \end{align}
 Note that when $\dim \hilb{H}_E = 1$, the gradient of $E_\text{abs}$
 reduces to

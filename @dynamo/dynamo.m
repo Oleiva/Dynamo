@@ -271,11 +271,8 @@ classdef dynamo < matlab.mixin.Copyable
             L_end = self.system.X_final'; % L: X_final' propagated backwards
         end
 
-        % exact gradient? we need the eigendecomposition data.
-        use_eig = strcmp(self.config.dP, 'eig');
-
         % UL_hack: mixed states in a closed system
-        self.cache = cache(self.seq.n_timeslots(), self.system.n_ensemble(), U_start, L_end, use_eig, self.config.UL_hack);
+        self.cache = cache(self.seq.n_timeslots(), self.system.n_ensemble(), U_start, L_end, self.config.dP, self.config.UL_hack);
     end
 
 

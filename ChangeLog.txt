@@ -15,6 +15,7 @@ b bugfix
               + dynamo/plot_pop, dynamo/plot_eig: New plotting functions.
               + dynamo/shake: Randomly perturbs the control sequence, can be used to get out of local optima.
               + dynamo/split: Refines the control sequence by splitting given bins into several.
+              + dynamo: Gradient using truncated Taylor series with scaling and squaring.
               + dynamo/gradient_full_exact: Exact gradient using the auxiliary matrix technique.
               + test: Unit tests for DYNAMO.
               + test_rand_problem: Generates random optimization problems for testing/benchmarking purposes.
