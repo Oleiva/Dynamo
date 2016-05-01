@@ -4,8 +4,8 @@ function [exitflag, output] = search_BFGS(self, obj_func, matlab_options)
 
 % default options
 opt = struct(...
-    'MaxIterations',            1e4,...
-    'MaxFunctionEvaluations',   1e4,...
+    'MaxIterations',            1e6,...
+    'MaxFunctionEvaluations',   1e6,...
     'FunctionTolerance',        NaN,...
     'OptimalityTolerance',     1e-8,...
     'StepTolerance',           1e-8,...
@@ -20,12 +20,13 @@ self.opt.matlab_options = opt;
 % initial values
 x0 = self.seq.get(self.opt.control_mask);
 
-if 1
+if 0
     % TEST: New BFGS implementation
     fprintf('\nOptimizing algorithm: BFGS. Running...\n\n'); drawnow;
     [x, fval, exitflag, output] = bfgs(obj_func, x0, opt);
 else
     % Old BFGS implementation using fminunc
+    opt = map_matlab_options(opt, true);
 
     % additional default options for fminunc
     % TODO with newer MATLAB versions we would do it like this:
@@ -72,9 +73,9 @@ function st = map_matlab_options(st, invert)
 
     % map the fields
     for k=1:size(map, 1)
-        temp = map(k, 1); % field name to be mapped
+        temp = map{k, 1}; % field name to be mapped
         if isfield(st, temp)
-            st.(map(k, 2)) = st.(temp);
+            st.(map{k, 2}) = st.(temp);
         end
     end
     st = rmfield(st, map(:, 1));  % remove the old fields
