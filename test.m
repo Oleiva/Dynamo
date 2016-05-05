@@ -11,18 +11,48 @@ function test(d)
 tol = 1e-10;
 
 if nargin < 1
-    d = test_suite(21);
+    d = test_suite(1);
 end
 
 n_timeslots = d.seq.n_timeslots();
-
 X = d.X();
+temp = d.seq.tau;
 
-% split some random bins, this must not change the effect of the sequence
+
+%% export, then import a sequence
+
+% no TU defined, do not try to use it
+[A, desc] = d.export(true, false);
+desc
+d.import(A, true);
+assert_equal(d.seq.tau, temp, tol);
+assert_equal(d.X(), X, tol);
+
+d.system.set_TU(1e-3);
+% TU defined, get rid of it
+[A, desc] = d.export(true, false);
+desc
+d.import(A, true);
+assert_equal(d.seq.tau, temp, tol);
+assert_equal(d.X(), X, tol);
+
+% TU defined, keep it
+[A, desc] = d.export(true, true);
+desc
+d.import(A, true, 1e-3);
+assert_equal(d.seq.tau, temp, tol);
+assert_equal(d.X(), X, tol);
+
+
+
+%% split some random bins, this must not change the effect of the sequence
+
 bins = find(rand(1, n_timeslots) < 0.5);
 n = randi([2, 5]);
 d.split(bins, n);
 assert_equal(d.X(), X, tol);
+
+
 
 disp('All tests passed.');
 end

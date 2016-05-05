@@ -1,7 +1,7 @@
 classdef control_seq < matlab.mixin.Copyable
 % Copyable handle class for control sequences.
 
-% Ville Bergholm 2011-2015
+% Ville Bergholm 2011-2016
 
   properties
       tau_par        % parametrization of tau, size == [n_timeslots, 2]
@@ -49,6 +49,9 @@ classdef control_seq < matlab.mixin.Copyable
         self.tau_par = tau_par;
         self.control_type = control_type;
         self.control_par = control_par;
+
+        % init raw params to some reasonable values, but do not transform them yet
+        self.raw = [zeros(n_timeslots, n_controls), acos(0) * ones(n_timeslots, 1)]; % tau: halfway
     end
 
     
@@ -64,7 +67,7 @@ classdef control_seq < matlab.mixin.Copyable
     end
     
     
-    function ret = get(self, control_mask)
+    function ret = get_raw(self, control_mask)
     % Returns the raw controls corresponding to the mask given, or all
     % of them if no mask is given.
 
@@ -76,7 +79,7 @@ classdef control_seq < matlab.mixin.Copyable
     end
 
     
-    function set(self, raw)
+    function set_raw(self, raw)
     % Transform and set the controls using a diagonal transformation function.
     %
     % raw: raw, untransformed control values, size(raw) == [n_timeslots, n_controls + 1].
@@ -93,7 +96,6 @@ classdef control_seq < matlab.mixin.Copyable
         if sss(2) ~= n_controls + 1
             error('Given controls have the wrong number of control fields.')
         end
-
         self.raw = raw;
         
         % Tau control is the last one.
@@ -101,7 +103,9 @@ classdef control_seq < matlab.mixin.Copyable
 
         % Returned tau values should always be positive, and not too large
         % if we're using the 1st order gradient approximation.
-        % Stretchy bins with min and max duration:  t_raw = 0 <=> min duration
+        % Stretchy bins with min and max duration:
+        % t_raw = 0    <=> min duration
+        % t_raw = pi/2 <=> average duration
         self.tau       = self.tau_par(:,1) +0.5 * self.tau_par(:,2) .* (1-cos(t_raw));
         self.tau_deriv = 0.5 * self.tau_par(:,2) .* sin(t_raw);
 
@@ -226,11 +230,11 @@ classdef control_seq < matlab.mixin.Copyable
 
         % transform the new controls
         self.tau_par = tau_par;
-        self.set(raw);
+        self.set_raw(raw);
     end
 
 
-    function shake(self, rel_change)
+    function shake(self, rel_change, abs_change, t_dependent)
     % Makes a small random perturbation to the control sequence, can be used
     % to shake the system out of a local optimum.
     % Does not touch the tau values.
@@ -239,10 +243,21 @@ classdef control_seq < matlab.mixin.Copyable
         n_controls = self.n_controls();
         % shape vectors
         f_shape = [n_timeslots, n_controls];
+        t_shape = [n_timeslots, 1];
+        c_shape = [1, n_controls];
 
-        raw = self.get();
-        raw(:, 1:n_controls) = raw(:, 1:n_controls) .* (1 +rel_change * randn(f_shape));
-        self.set(raw);
+        f = self.raw(:, 1:n_controls);
+        if ~t_dependent
+            % perturb each control field randomly
+            p_abs = ones(t_shape) * abs_change * randn(c_shape);
+            p_rel = ones(t_shape) * (1 +rel_change * randn(c_shape));
+            f = f .* p_rel +p_abs;
+        else
+            % add some time-dependent noise on top of the raw controls
+            f = f .* (1 +rel_change * randn(f_shape)) +abs_change * randn(f_shape);
+        end
+        self.raw(:, 1:n_controls) = f;
+        self.set_raw(self.raw);
     end
 
 

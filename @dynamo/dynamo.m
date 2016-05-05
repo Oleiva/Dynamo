@@ -323,7 +323,7 @@ classdef dynamo < matlab.mixin.Copyable
             % _full:
             self.cache.g_needed_now = 2; % HACK ln37ae983e
         else
-            % _tr, _abs, _real:
+            % _tr, _abs:
             self.cache.g_needed_now = true;
         end
         
@@ -370,14 +370,14 @@ classdef dynamo < matlab.mixin.Copyable
 
     
     function update_controls(self, raw, control_mask)
-    % Updates selected controls.
+    % Updates selected raw controls.
     %
     %  raw: vector of raw, untransformed control values, control_mask: corresponding mask.
     %
     %  Updates control values for which control_mask is true.
     %  Makes the changed timeslots and stuff that depends on them stale.
 
-        old = self.seq.get();
+        old = self.seq.get_raw();
          
         if nargin < 3 || isempty(control_mask)
             control_mask = true(size(old)); % full mask
@@ -392,12 +392,47 @@ classdef dynamo < matlab.mixin.Copyable
 
         if any(changed_t_mask)
             % actually update the controls
-            self.seq.set(new);
+            self.seq.set_raw(new);
             self.cache.mark_as_stale(changed_t_mask);
         end
     end
 
-    
+
+    function set_controls(self, fields, tau)
+    % Sets the controls to the given values.
+    % If the requested values are incompatible with the current
+    % control transforms, fails with an error message.
+
+        n_timeslots = self.seq.n_timeslots();
+        n_controls = self.seq.n_controls();
+
+        % reverse transform into raw control parameters
+        if isempty(fields)
+            % use old values
+            fields = self.seq.raw(:,1:end-1);
+        else
+            if isscalar(fields)
+                % set all fields to the same value
+                fields = fields * ones(1, n_controls);
+            end
+            fields = self.seq.inv_transform(fields);
+            if size(fields, 1) == 1
+                % set all timeslots to the same values
+                fields = ones(n_timeslots, 1) * fields;
+            end
+        end
+        if nargin < 3 || isempty(tau)
+            % use old values
+            tau = self.seq.raw(:,end);
+        else
+            tau = self.seq.inv_transform_tau(tau);
+        end
+
+        self.seq.set_raw([fields, tau]);
+        self.cache.invalidate(); % flush the entire cache
+    end
+
+
     function cache_refresh(self)
     % Performs all the queued computations using the cache subsystem.
         self.cache.refresh(self.system, self.seq.tau, self.seq.fields);
@@ -604,11 +639,20 @@ classdef dynamo < matlab.mixin.Copyable
         legend(self.system.state_labels, 'interpreter', 'latex');
     end
 
-    function shake(self, rel_change)
+    function shake(self, rel_change, abs_change, t_dependent)
     % Makes a small random perturbation to the control sequence, can be used
     % to shake the system out of a local optimum.
     % Does not touch the tau values.
-        self.seq.shake(rel_change);
+        if nargin < 4
+            t_dependent = false;
+        end
+        if nargin < 3
+            abs_change = 0;
+        end
+        if nargin < 2
+            rel_change = 0.1;
+        end
+        self.seq.shake(rel_change, abs_change, t_dependent);
         self.cache.invalidate(); % flush the entire cache
     end
 

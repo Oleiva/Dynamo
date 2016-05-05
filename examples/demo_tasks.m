@@ -3,7 +3,7 @@ function dyn = demo_tasks(task)
 %
 %  dyn = demo_tasks(task)
 
-% Ville Bergholm 2014
+% Ville Bergholm 2014-2016
 
 
 %% Pauli matrices
@@ -38,7 +38,7 @@ H_drift = heisenberg(dim, @(s,a,b) J(s)*C(a,b));
 %c_labels = {'X', 'Y'};
 
 % limit driving Rabi frequency to the interval [-1, 1]
-control_type = 'mm';
+control_type = '..';
 temp = [-1,2] * 10;
 control_par = {temp, temp};
 
@@ -159,7 +159,7 @@ dyn.system.set_labels(desc, dim, c_labels);
 dyn.seq_init(bins, T * [1, 0], control_type, control_par);
 
 % random, constant initial controls
-dyn.easy_control(0, 0, 0.4, false);
+dyn.shake(0, 0.4, false);
 
 % do not optimize taus
 mask = dyn.full_mask(false);

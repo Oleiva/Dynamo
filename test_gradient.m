@@ -35,7 +35,7 @@ if nargin < 2
     switch test
       case 'acc'
         d = test_suite(21);
-        d.easy_control({d.seq.fields, d.seq.tau+0.01*randn(size(d.seq.tau))});
+        d.set_controls([], d.seq.tau+0.01*randn(size(d.seq.tau)));
         
       case 'time'
         d = test_rand_problem('closed gate', 16, 4);
@@ -93,7 +93,7 @@ switch test
   case 'time'
 
 % save the initial controls
-%x0 = d.seq.get(mask);
+%x0 = d.seq.get_raw(mask);
 %d.update_controls(x0 + delta, mask);
 
 tic
@@ -113,7 +113,7 @@ t = toc
 %d.cache_fill();  % recompute everything
 
 % save the initial controls
-x0 = d.seq.get(mask);
+x0 = d.seq.get_raw(mask);
 
 % error function and its gradient at x0
 [err, grad] = d.compute_error(mask);

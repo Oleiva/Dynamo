@@ -18,7 +18,7 @@ opt = apply_options(opt, matlab_options, true);
 self.opt.matlab_options = opt;
 
 % initial values
-x0 = self.seq.get(self.opt.control_mask);
+x0 = self.seq.get_raw(self.opt.control_mask);
 
 if 0
     % TEST: New BFGS implementation

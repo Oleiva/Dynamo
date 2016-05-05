@@ -50,13 +50,14 @@ dyn.system.set_labels(desc, dim, c_labels);
 dyn.seq_init(n_bins, T * [0.5, 1.5]); %, control_type, control_par);
 
 % random, constant initial controls
-dyn.easy_control(0.1 * randn(1, 2));
+dyn.set_controls(0.1 * randn(1, 2));
 
 mask = dyn.full_mask(false);
 
 t = ceil(n_bins/2);  % replace the propagator in this bin by P_xy
 dyn.cache.set_P(t, 1, P_xy);
-mask(t,:) = false;  % do not update the controls in this bin
+mask(t,:) = false;  % do not update the controls so as not to overwrite P_xy
+dyn.seq.raw(t, 1:end-1) = 0; % set the phantom controls to zero to make the sequence look nicer
 
 dyn.ui_open();
 dyn.search(mask);

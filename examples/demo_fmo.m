@@ -249,8 +249,8 @@ T = T / TU; % T originally in ps, now in TU
 tau_par = T * [1, 0];
 dyn.seq_init(bins, tau_par, control_type, control_par);
 
-dyn.easy_control(1e-3 * f7_5_plenio, 0.0, 0, false);
-%dyn.easy_control(1e-3 * rand(size(f7_5_const)), 0.0, 0, false);
+dyn.set_controls(1e-3 * f7_5_plenio);
+%dyn.set_controls(1e-3 * rand(size(f7_5_const)));
 
 
 %% now do the actual search

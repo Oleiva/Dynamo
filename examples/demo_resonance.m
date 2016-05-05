@@ -54,7 +54,7 @@ dyn.system.set_labels('Single-qubit resonant driving demo.', dim, c_labels);
 % random initial controls
 T = 2*pi;
 dyn.seq_init(201, T * [1, 0], control_type, control_par);
-dyn.easy_control(0, 0, 1, false);
+dyn.set_controls(randn(1));
 
 
 %% Now do the actual search

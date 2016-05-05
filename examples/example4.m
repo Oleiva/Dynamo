@@ -131,7 +131,7 @@ dyn.system.set_labels(desc, st_labels, c_labels);
 T = 10;
 
 dyn.seq_init(151, T * [0.5, 1.0], control_type, control_par);
-dyn.easy_control(0.1 * ones(1,n_sites));
+dyn.set_controls(0.1);
 
 
 %% now do the actual search
