@@ -21,25 +21,27 @@ temp = d.seq.tau;
 
 %% export, then import a sequence
 
+in_polar = false;
+
 % no TU defined, do not try to use it
-[A, desc] = d.export(true, false);
+[A, desc] = d.export(in_polar, false);
 desc
-d.import(A, true);
+d.import(A, in_polar);
 assert_equal(d.seq.tau, temp, tol);
 assert_equal(d.X(), X, tol);
 
 d.system.set_TU(1e-3);
 % TU defined, get rid of it
-[A, desc] = d.export(true, false);
+[A, desc] = d.export(in_polar, false);
 desc
-d.import(A, true);
+d.import(A, in_polar);
 assert_equal(d.seq.tau, temp, tol);
 assert_equal(d.X(), X, tol);
 
 % TU defined, keep it
-[A, desc] = d.export(true, true);
+[A, desc] = d.export(in_polar, true);
 desc
-d.import(A, true, 1e-3);
+d.import(A, in_polar, 1e-3);
 assert_equal(d.seq.tau, temp, tol);
 assert_equal(d.X(), X, tol);
 

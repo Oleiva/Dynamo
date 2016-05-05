@@ -370,6 +370,38 @@ and we get
 \end{align}
 
 
+\subsection{Complexity considerations}
+
+Assume we have $n$~time slices and $c$~controls per slice.
+Computing the propagator for slice~$k$ involves
+one exponentiation (complexity~$e$ in terms of matrix multiplications (mms)),
+or alternatively one lower-norm exponentiation (complexity $e'$), followed by $m$~squarings.
+Likewise, the propagator partial derivatives can be computed using a truncated Taylor series
+with $q$ terms, or a shorter Taylor series ($q'$ terms) followed by $m$~squarings.
+
+\begin{table}[h]
+\begin{tabular}{lc}
+computation & C (in mms)\\
+\hline
+$\spr$, $\Lambda$, error & $n(C(P) +2)+1$\\
+gradient & $nc(C(\partial P)+2)$\\
+$P$ & $e$\\
+$P$, scaling and squaring & $e'+m$\\
+$P$, eig & $2+$eig \\
+$\partial P$, eig & $4$\\
+$\partial P$, finite diff & $e$\\
+$\partial P$, series & $2q$\\
+$\partial P$, series, ss & $2(q' +m)+1$
+\end{tabular}
+\end{table}
+
+The amount of memory to store one full
+complex IEEE double precision matrix~$M$, dimension $d\times d$, is
+\be
+\text{mem}(M) = 2 \times 8 \times d^2~\text{bytes} = 16 d^2~\text{bytes}.
+\ee
+The cache uses this amount of memory multiplied by $(4n + 2)r$ to store $H$, $P$, $U$, and~$L$,
+where $r$~is the ensemble size.
 
 \section{Optimization tasks}
 

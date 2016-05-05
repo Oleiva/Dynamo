@@ -116,8 +116,6 @@ Random ideas and things to test:
 
 - problems resulting from using an approximated gradient (incl. finite diff with bad epsilon): breaking symmetries in controls, bad convergence, fake "dynamic" local minima?
 
-- combine similar gradient and error funcs if there is no perfomance loss, merge gradient_setup into gradient funcs themselves.
-
 - open state overlap mode: warn if final state is not pure
 
 - exact full gradient by auxiliary matrix method: use sparse matrices, or Krylov subspace methods???
@@ -125,10 +123,30 @@ Random ideas and things to test:
 
 - task: k-state transfers (paper by A Spoerl (PRB, 2011))
 
-- task: gates within subspaces/diagonal blocks, with arbitrary relative phases, or ignoring one subspace entirely
-
 - analytic and piecewise analytic controls: http://arxiv.org/abs/1507.04261
 
 - Hessian conditioning also for BFGS, get rid of saddle-point related? shelves/plateaus in convergence
 
 - gpuarray / CUDA, parallelization
+
+- GUI: buttons: stop, resume, plot_pop etc.
+
+- make setting up ensembles easier: 2D, n-D? func handles vs. cell vectors?
+
+- store individual ensemble item errors in cache?
+  plot E of slices of ensembles
+
+- save/reload/resume
+
+- ensemble demo: plot(detuning, error) for a range of detunings, not just the points used in optimization.
+
+- update manual, explain important classes and methods
+
+- task: like gate_partial, except ignoring one subspace/block entirely?
+
+- task: states/unitaries divided into blocks, where phase differences between blocks are unimportant?
+  left multiply U with the corresponding phase gate, minimize error over the phases.
+  extreme case: unitaries with arbitrary phases (when we only care about populations)
+  E(U,T) = 1-1/n \sum_k | <k|U T^\dagger|> |
+
+- task: maximize the expectation value of an operator / make it as close to a target value as possible
