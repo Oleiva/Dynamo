@@ -9,13 +9,16 @@ opt = struct(...
     'FunctionTolerance',        NaN,...
     'OptimalityTolerance',     1e-8,...
     'StepTolerance',           1e-8,...
-    'Display',              'final',...
-    'OutputFcn', @(x, optimValues, state) monitor_func(self, x, optimValues, state));
+    'Display',              'final');
 
 % apply user-defined options
 opt = apply_options(opt, matlab_options, true);
 % save a copy
 self.opt.matlab_options = opt;
+
+% HACK we do not wish to save the monitor function handle with matlab_options
+% because it does not survive saving/loading.
+opt.OutputFcn = @(x, optimValues, state) monitor_func(self, x, optimValues, state);
 
 % initial values
 x0 = self.seq.get_raw(self.opt.control_mask);
