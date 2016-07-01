@@ -496,10 +496,17 @@ classdef dynamo < matlab.mixin.Copyable
     function plot_stats(self, stat, ax)
     % Plots the optimization stats (like the error) as a function of wall time.
 
-        fp = @plot;
+        [stat, pt] = strtok(stat);
+        % plot type
+        switch strtok(pt)
+          case 'semilog'
+            fp = @semilogy;
+          otherwise
+            fp = @plot;
+        end
         switch stat
           case 'error'
-            fp = @(a,t,x,m) semilogy(a, t, abs(x), m);
+            fp = @(a,t,x,m) fp(a, t, abs(x), m);
           case 'control_integral'
           otherwise
             error('Unknown stat.')

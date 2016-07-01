@@ -6,6 +6,8 @@ function seq = import(self, A, in_polar, TU)
 %  or, if in_polar is true,
 %    [tau (s), f_rabi_1 (Hz), phi_1, f_rabi_2 (Hz), phi_2, ...]
 %
+%  If TU is given, the units for the data in A are TU s and 1/(TU s) instead.
+%
 %  Importing an exported sequence should leave Dynamo in the exact same state.
 
 % Ville Bergholm 2013-2016
@@ -35,6 +37,10 @@ A = A(:, 2:end);
 n_bins = size(A, 1)
 n_controls = size(A, 2)
 
+if self.system.n_controls() ~= n_controls
+    error('Wrong number of controls.')
+end
+
 if in_polar
     % transform the controls from polar to cartesian coordinates
     f = zeros(size(A));
@@ -49,5 +55,6 @@ else
     f = A * 2*pi / scale;
 end
 
+%self.seq_init(n_bins, T * [0.5, 1]);
 self.set_controls(f, tau);
 end
