@@ -79,6 +79,7 @@ classdef dynamo < matlab.mixin.Copyable
         
         config.task = task;
         config.nonprojective_error = false;
+        config.frobenius_like_error = true;  % error can be interpreted as |A-B|_F^2 / (2 * |A|_F^2)
         config.epsilon  = 2e-8;   % finite differencing: approximately sqrt(eps(double))
         config.UL_mixed = false;  % HACK: mixed states in a closed system
 
@@ -125,6 +126,7 @@ classdef dynamo < matlab.mixin.Copyable
             switch task_str
               case 'state'
                 % TEST more efficient Hilbert space implementation
+                % TODO overlap error
                 out = strcat(out, ' mixed state transfer');
                 if all(input_rank == 1)
                     error('Either the initial or the final state should be a state operator.')
@@ -194,6 +196,7 @@ classdef dynamo < matlab.mixin.Copyable
                     out = strcat(out, ' (overlap)');
                     config.error_func = @error_abs;
                     config.nonprojective_error = true;
+                    config.frobenius_like_error = false;
                     config.f_max = sys.norm2;
                 else
                     % full distance error function

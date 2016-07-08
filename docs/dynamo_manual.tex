@@ -470,54 +470,68 @@ The results of this section are summarized in Table~\ref{table:tasks}.
 
 
 \begin{table}
-\begin{tabular}{ll|c|c|l|l|l|l|l}
-& & task & space & $X_i$ & $X_f$ & $\|X\|^2$ & propagation & error function\\
+\begin{tabular}{ll|c|c|c|l|l|l|l|l}
+& & task & special & space & $X_i$ & $X_f$ & $\|X\|^2$ & propagation & error function\\
 \hline
 Abstract &
-& $\ket{v_i} \to \ket{v_f}$ & V
+& $\ket{v_i} \to \ket{v_f}$ && V
 & $\ket{v_i}$ &$\ket{v_f}$ & $\braket{v}{v}$ &
 \eqref{eq:master} & $E_\text{full}$\\
-& & $W_i \to W_f$ & V
+& & $W_i \to W_f$ && V
 & $W_i$ & $W_f$ & $\tr(W^\dagger W)$ &
 \eqref{eq:master} & $E_\text{full}$\\
 \hline
 Closed system & S
-& $\ket{\psi_i} \to \ket{\psi_f}$ & H
-& $\ket{\psi_i}$ & $\ket{\psi_f}$ & 1 &
-\eqref{eq:master} & $E_\text{abs}$ (with phase: $E_\text{real}$)\\
+& $\ket{\psi_i} \to \ket{\psi_f}$ && H
+& $\ket{\psi_i}$ & $\ket{\psi_f}$ & $\braket{\psi}{\psi}$ &
+\eqref{eq:master} & $E_\text{abs}$\\
+& & $\ket{\psi_i} \to \ket{\psi_f}$ & phase & H
+& $\ket{\psi_i}$ & $\ket{\psi_f}$ & $\braket{\psi}{\psi}$ &
+\eqref{eq:master} & $E_\text{full} \to E_\text{real}$\\
 %& $\rho_i \to \rho_f$ & L & $\cvec(\rho)$ & $P(\rho)$ & $E_\text{real}$\\
-& & $\rho_i \to \rho_f$ & H
+& & $\rho_i \to \rho_f$ && H
 & $\rho_i$ & $\rho_f$ & $P(\rho)$ &
-\eqref{eq:vonneumann} & $E_\text{real} + C$\\
-%& $\rho_i \to \ketbra{\psi_f}{\psi_f}$ & H & $\rho$ & $P(\rho)$ & $E_\text{real}$ (overlap)\\
-& & $U_i \to U_f$ & H
+\eqref{eq:vonneumann} & $E_\text{full} \to E_\text{real} + C$\\
+& & $\rho_i \to \ket{\psi_f}$ & overlap & H
+& $\rho_i$ & $\ket{\psi_f}$ & $P(\rho)$ &
+\eqref{eq:vonneumann} & $E_\text{real}^*$\\
+& & $U_i \to U_f$ && H
 & $U_i$ & $U_f$ & $d_S$ &
-\eqref{eq:master} & $E_\text{abs}$ (with phase: $E_\text{real}$)\\
+\eqref{eq:master} & $E_\text{abs}$\\
+& & $U_i \to U_f$ & phase & H
+& $U_i$ & $U_f$ & $d_S$ &
+\eqref{eq:master} & $E_\text{full} \to E_\text{real}$\\
 \hline
 Closed system & SE
-& $\rho_i \to \rho_f$ & H
+& $\rho_i \to \rho_f$ && H
 & $\rho_i \otimes \rho_E$ & $\rho_f$ & $P(\rho)$ &
-\eqref{eq:vonneumann} & $E_\text{full}$\\
-& & $U_i \to U_f$ & H
+\eqref{eq:vonneumann} & $E_\text{full}$???\\
+& & $U_i \to U_f$ && H
 & $U_i \otimes \I_E$ & $U_f \otimes \I_E$ & $d_S d_E$ &
 \eqref{eq:master} & $E_\text{abs}$\\
 \hline
 Open system & S
-& $\rho_i \to \rho_f$ & L & $\cvec(\rho_i)$ & $\cvec(\rho_f)$ & $P(\rho)$ &
+& $\rho_i \to \rho_f$ && L & $\cvec(\rho_i)$ & $\cvec(\rho_f)$ & $P(\rho)$ &
 \eqref{eq:master} & $E_\text{full}$\\
-& & $\rho_i \to \ketbra{\psi_f}{\psi_f}$ & L
+& & $\rho_i \to \ket{\psi_f}$ & overlap & L
 & $\cvec(\rho_i)$ & $\cvec(\ketbra{\psi_f}{\psi_f})$ & $P(\rho)$ &
-\eqref{eq:master} & $E_\text{real}$ (overlap)\\
-& & $F_i \to F_f$ & L & $F_i$ & $F_f$ & $\tr(F^\dagger F)$ &
+\eqref{eq:master} & $E_\text{real}^*$\\
+& & $F_i \to F_f$ && L & $F_i$ & $F_f$ & $\tr(F^\dagger F)$ &
 \eqref{eq:master} & $E_\text{full}$\\
 \hline
 Open system & SE
-& $\rho_i \to \rho_f$ & L
+& $\rho_i \to \rho_f$ && L
 & $\cvec(\rho_i \otimes \rho_E)$ & $\rho_f$ & $P(\rho)$ &
 \eqref{eq:master} & $E_\text{full}$\\
-& & $U_i \to U_f$ & L & TODO
+& & $U_i \to U_f$ && L & TODO
 \end{tabular}
 \caption{Summary of the optimization tasks.
+The default error function is $E_\text{full}$, the (scaled) Frobenius error squared.
+For some tasks this is not adequate (e.g. if we need to ignore the global phase, or are just interested in an overlap with a ket).
+Also, in closed systems $\|X\|$ is constant, so if there is no environment we may replace $E_\text{full}$ with $E_\text{real}$
+which is easier to compute.
+The $E_\text{abs}$ error functions can be interpreted as Frobenius errors, but not computed using the standard formula.
+Only for the overlap errors (marked with asterisk) this interpretation is not possible.
 \label{table:tasks}
 }
 \end{table}
