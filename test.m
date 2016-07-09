@@ -55,11 +55,14 @@ d.split(bins, n);
 assert_equal(d.X(), X, tol);
 
 
+disp('All unit tests passed.')
 
-disp('All basic unit tests passed. Now testing all the optimization tasks.');
-pause
 
 %% test all the tasks
+
+if 1
+disp('Now testing all the optimization tasks.');
+pause
 
 demo_tasks('abstract vector')
 demo_tasks('abstract matrix')
@@ -75,6 +78,20 @@ demo_tasks('open state overlap')
 demo_tasks('open gate')
 demo_tasks('open state_partial')
 %demo_tasks('open gate_partial')
+end
+
+%% test all the demos
+
+if 1
+disp('Now running all the demos.');
+pause
+
+demo_coop_gates()
+demo_ensemble()
+demo_fmo()
+demo_resonance()
+demo_tau()
+end
 end
 
 

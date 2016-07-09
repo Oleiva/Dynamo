@@ -94,6 +94,7 @@ for k=1:length(xxx)
 end
 err = sqrt(2 * dyn.system.norm2 * err); % into Frobenius norm error
 figure
+title('Sequence error as a function of the ensemble parameter')
 xlabel(str);
 ylabel('Frobenius norm error');
 axis([xxx(1), xxx(end), 0, max(err)]);

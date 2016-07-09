@@ -17,7 +17,7 @@ TODO list for Dynamo 2
          *  unit tests
            *  the same unitary (closed) optimization problem should yield a similar solution in both "closed" and "open" modes
            *  the same unitary sequence must return the same error in both "closed" and "open" modes
-         *  script that runs all the demos (to make sure they still run!)
+        (*)  script that runs all the demos (to make sure they still run!)
 
 2. Minimal benchmarking framework
       1. Allow user to easily compare several algorithms for a given problem
@@ -43,7 +43,6 @@ TODO list for Dynamo 2
 
 5. Additional documentation
      (1) Inline in the code
-           (*) Modify some variable names to be self-documenting
      (2) At function headers so Matlab's "help" gives more meaningful results
       3. Wiki
       4. Update README.txt
@@ -86,7 +85,7 @@ TODO list for Dynamo 2
 
 Random ideas and things to test:
 
-- target = id with relaxation
+- Demo: target = eye() with relaxation
 
 - When are the controls kind of self-limited? Only if we need to wait
   for H_drift (coupling) to complete the operation?
@@ -131,14 +130,10 @@ Random ideas and things to test:
 
 - GUI: buttons: stop, resume, plot_pop etc.
 
-- make setting up ensembles easier: 2D, n-D? func handles vs. cell vectors?
-
 - store individual ensemble item errors in cache?
   plot E of slices of ensembles
 
 - save/reload/resume
-
-- ensemble demo: plot(detuning, error) for a range of detunings, not just the points used in optimization.
 
 - update manual, explain important classes and methods
 

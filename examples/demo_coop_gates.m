@@ -41,12 +41,11 @@ fin = ini;
 H_drift = Z / 2;
 [H_ctrl, c_labels] = control_ops(dim, 'xy');
 
-desc = task;
 T = 2;
 n_bins = 7;
 
 dyn = dynamo(task, ini, fin, H_drift, H_ctrl);
-dyn.system.set_labels(desc, dim, c_labels);
+dyn.system.set_labels('Co-operative gates optimization demo', dim, c_labels);
 dyn.seq_init(n_bins, T * [0.5, 1.5]); %, control_type, control_par);
 
 % random, constant initial controls
