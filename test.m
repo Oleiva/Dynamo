@@ -4,7 +4,7 @@ function test(d)
 %  d is a Dynamo instance containing the optimization problem used.
 %  If no d is given, uses one of the test suite problems.
     
-% Ville Bergholm 2015
+% Ville Bergholm 2015-2016
 
 
 % tolerance for numerical errors
@@ -56,7 +56,25 @@ assert_equal(d.X(), X, tol);
 
 
 
-disp('All tests passed.');
+disp('All basic unit tests passed. Now testing all the optimization tasks.');
+pause
+
+%% test all the tasks
+
+demo_tasks('abstract vector')
+demo_tasks('abstract matrix')
+demo_tasks('closed ket')
+demo_tasks('closed ket phase')
+demo_tasks('closed state')
+demo_tasks('closed gate')
+demo_tasks('closed gate phase')
+%demo_tasks('closed state_partial')
+demo_tasks('closed gate_partial')
+demo_tasks('open state')
+demo_tasks('open state overlap')
+demo_tasks('open gate')
+demo_tasks('open state_partial')
+%demo_tasks('open gate_partial')
 end
 
 

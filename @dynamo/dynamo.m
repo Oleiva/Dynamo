@@ -58,12 +58,19 @@ classdef dynamo < matlab.mixin.Copyable
   end
   
   methods
-    function self = dynamo(task, initial, final, A, B, weight)
+    function self = dynamo(task, initial, final, A, B, weight, n_controls)
     % Constructor
 
         if nargin < 6
             % ensemble weights
             weight = 1;
+        end
+        if nargin < 7
+            if iscell(B)
+                n_controls = size(B, 2);
+            else
+                error('If B is not a cell vector, you must input the number of controls separately.')
+            end
         end
         
         task = lower(task);
@@ -92,7 +99,7 @@ classdef dynamo < matlab.mixin.Copyable
 
         input_dim  = [size(initial, 1), size(final, 1)];
         input_rank = [size(initial, 2), size(final, 2)]; % check the validity of the inputs
-        sys = qsystem(weight, input_dim, size(B, 2)); % FIXME assumes B is a cell array
+        sys = qsystem(weight, input_dim, n_controls);
         
         out = 'Target operation:';
         switch system_str
