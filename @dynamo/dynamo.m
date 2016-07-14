@@ -26,7 +26,7 @@ classdef dynamo < matlab.mixin.Copyable
   methods (Static)
     function ret = version()
     % Returns the current DYNAMO version.
-        ret = '1.4.0alpha4';
+        ret = '1.4.0';
     end
 
 
@@ -69,7 +69,7 @@ classdef dynamo < matlab.mixin.Copyable
             if iscell(B)
                 n_controls = size(B, 2);
             else
-                error('If B is not a cell vector, you must input the number of controls separately.')
+                error('If B is not a cell array, you must input the number of controls separately.')
             end
         end
         
@@ -313,12 +313,12 @@ classdef dynamo < matlab.mixin.Copyable
     end
 
 
-    function [err_out, grad_out] = compute_error(self, control_mask)
+    function [err_out, grad_out] = compute_error(self, control_mask, ensemble_idx)
     % Returns the error (and its gradient) at current control values.
     % This is where we sum over the system ensemble if necessary.
 
         % gradient requires a control mask
-        if nargout == 2 && nargin < 2
+        if nargout == 2 && (nargin < 2 || isempty(control_mask))
             control_mask = self.full_mask(false);
         end
 
@@ -341,15 +341,23 @@ classdef dynamo < matlab.mixin.Copyable
 
         err_out  = 0;
         grad_out = 0;
-        % loop over the ensemble
         n_ensemble = self.system.n_ensemble();
-        for k = 1:n_ensemble
+        if nargin < 3
+            % weighted average over the ensemble
+            pick = 1:n_ensemble;
+            weight = self.system.weight;
+        else
+            % just one ensemble member
+            pick = ensemble_idx;
+            weight = ones(1, n_ensemble);
+        end
+        for k = pick
             %% (real) normalized error
             err = self.config.error_func(self, k) / self.system.norm2;
             fprintf('Error (%d): %g\n', k, err);
 
             % weighted ensemble average
-            err_out = err_out +self.system.weight(k) * err;
+            err_out = err_out +weight(k) * err;
             if nargout < 2
                 % just the error
                 continue
@@ -373,9 +381,8 @@ classdef dynamo < matlab.mixin.Copyable
                 grad(z) = self.config.error_func(self, k, t, c);
             end
             % real, normalized, weighted gradient
-            grad_out = grad_out +(self.system.weight(k) / self.system.norm2) * grad;
+            grad_out = grad_out +(weight(k) / self.system.norm2) * grad;
         end
-        %fprintf('Error: %g\n', err_out);
     end
 
     

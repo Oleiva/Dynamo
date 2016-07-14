@@ -6,11 +6,12 @@ Changelog for DYNAMO - Quantum Dynamic Optimization Package
 b bugfix
 
 
-1.4.0       in progress
+1.4.0       2016-07-14
+              + ChangeLog.txt
               + Ensemble optimization.
+              * dynamo/compute_error can return errors and gradients of individual ensemble members.
               * docs: User manual expanded and updated.
-              * Stats system can handle several optimization runs.
-                Interrupted runs can be continued automatically.
+              * Stats system can handle several optimization runs. Interrupted runs can be continued automatically.
               * dynamo/easy_control replaced with dynamo/set_controls.
               * Gradient system simplified. Added gradients using a truncated Taylor series
                 with scaling and squaring, and the auxiliary matrix technique.
@@ -39,3 +40,6 @@ b bugfix
               b dynamo/gradient_setup: gradient_g_mixed_exact provided with wrong *_needed_now.
               b dynamo/gradient_g_mixed_exact: gradient with respect to tau was wrong.
               b qsystem.B_is_Hamiltonian was not set up properly, resulting in a spurious warning.
+
+
+1.4.1       in progress

@@ -83,7 +83,7 @@ classdef qsystem < matlab.mixin.Copyable
         if length(C) == self.dim
             % assume it's a Hamiltonian
             [ret, is_H] = self.setup_hamiltonian(C, message);
-            ret = superop_comm(ret);  % into a commutator superoperator
+            ret = full(superop_comm(ret));  % into a commutator superoperator
         else
             % assume it's a Liouvillian
             ret = C;
