@@ -53,7 +53,7 @@ if 1
     B_func = @(x,c) H_ctrl{c};
 else
     str = 'relative pulse strength error';
-    x = linspace(-0.1, 0.1, 5)
+    x = linspace(-0.1, 0.1, n_ensemble)
     sigma = 0.08;
     A_func = @(x)   0.1 * H_drift;
     B_func = @(x,c) (1+x) * H_ctrl{c}; % vary control scaling

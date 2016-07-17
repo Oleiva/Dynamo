@@ -26,7 +26,7 @@ classdef dynamo < matlab.mixin.Copyable
   methods (Static)
     function ret = version()
     % Returns the current DYNAMO version.
-        ret = '1.4.0';
+        ret = '1.4.0+';
     end
 
 
@@ -67,12 +67,27 @@ classdef dynamo < matlab.mixin.Copyable
         end
         if nargin < 7
             if iscell(B)
+                if iscell(B{1})
+                    % TEST TODO: allow nested cell vectors for the
+                    % Python interface (which cannot do cell arrays).
+                    ne = length(B);
+                    nc = length(B{1});
+                    BB = cell(ne, nc);
+                    for k=1:ne
+                        if length(B{k}) ~= nc
+                            error('Each ensemble member must have the same number of controls.')
+                        end
+                        for c=1:nc
+                            BB{k, c} = B{k}{c};
+                        end
+                    end
+                    B = BB;
+                end
                 n_controls = size(B, 2);
             else
                 error('If B is not a cell array, you must input the number of controls separately.')
             end
         end
-        
         task = lower(task);
 
         %% Some basic data provenance
