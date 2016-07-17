@@ -63,7 +63,6 @@ disp('All unit tests passed.')
 if 1
 disp('Now testing all the optimization tasks.');
 pause
-
 demo_tasks('abstract vector')
 demo_tasks('abstract matrix')
 demo_tasks('closed ket')
@@ -85,7 +84,6 @@ end
 if 1
 disp('Now running all the demos.');
 pause
-
 demo_coop_gates()
 demo_ensemble()
 demo_fmo()

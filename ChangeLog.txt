@@ -43,3 +43,5 @@ b bugfix
 
 
 1.4.1       in progress
+              * init: added the examples directory to the path
+              + control_seq/transform

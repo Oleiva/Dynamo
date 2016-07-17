@@ -87,19 +87,24 @@ classdef control_seq < matlab.mixin.Copyable
     % Uses the (fixed) control parameters.
 
         sss = size(raw);
-        n_controls = self.n_controls();
         
         % Check the number of control fields. The last column are the tau controls.
         if sss(1) ~= self.n_timeslots()
             error('Given controls have the wrong number of timeslots.')
         end
-        if sss(2) ~= n_controls + 1
+        if sss(2) ~= self.n_controls() + 1
             error('Given controls have the wrong number of control fields.')
         end
         self.raw = raw;
-        
+        self.transform();
+    end
+
+    function transform(self)
+    % Transforms the array of raw controls, and use it to initialize
+    % taus and control fields and their derivatives.
+
         % Tau control is the last one.
-        t_raw = raw(:, end);
+        t_raw = self.raw(:, end);
 
         % Returned tau values should always be positive, and not too large
         % if we're using the 1st order gradient approximation.
@@ -109,34 +114,33 @@ classdef control_seq < matlab.mixin.Copyable
         self.tau       = self.tau_par(:,1) +0.5 * self.tau_par(:,2) .* (1-cos(t_raw));
         self.tau_deriv = 0.5 * self.tau_par(:,2) .* sin(t_raw);
 
-        sss = sss -[0, 1];
+        sss = size(self.raw) -[0, 1];
         self.fields = zeros(sss);
         self.fields_deriv = zeros(sss);
 
-        for k=1:n_controls
+        for k=1:self.n_controls()
+            temp = self.raw(:, k);
             switch self.control_type(k)
               case '.'  % no transformation
-                self.fields(:, k) = raw(:, k);
+                self.fields(:, k) = temp;
                 self.fields_deriv(:, k) = 1;
         
               case 'p'  % strictly nonnegative, u_k = r_k^2
-                self.fields(:, k) = raw(:, k).^2;
-                self.fields_deriv(:, k) = 2 * raw(:, k);
+                self.fields(:, k) = temp.^2;
+                self.fields_deriv(:, k) = 2 * temp;
                 
               case 'm'  % minimum and delta, u_k = min + delta * 0.5 * (1 - cos(r_k))
                 par = self.control_par{k};
-                self.fields(:, k) = par(1) +par(2) * 0.5 * (1 -cos(raw(:, k)));
-                self.fields_deriv(:, k) = par(2) * 0.5 * sin(raw(:, k));
+                self.fields(:, k) = par(1) +par(2) * 0.5 * (1 -cos(temp));
+                self.fields_deriv(:, k) = par(2) * 0.5 * sin(temp);
       
               otherwise
                 error('Unknown control type.')
             end
         end
-
         % TODO u_x = A*cos(phi), u_y = A*sin(phi) (not diagonal, but within the same bin, i.e. block diagonal)
         % fields_deriv(slot, c_j, raw_k) = d c_{sj} / d raw_{sk}
     end
-
 
     function ret = inv_transform(self, fields)
     % Given an array of control field values (columns corresponding
@@ -230,7 +234,8 @@ classdef control_seq < matlab.mixin.Copyable
 
         % transform the new controls
         self.tau_par = tau_par;
-        self.set_raw(raw);
+        self.raw = raw;
+        self.transform();
     end
 
 
@@ -257,7 +262,7 @@ classdef control_seq < matlab.mixin.Copyable
             f = f .* (1 +rel_change * randn(f_shape)) +abs_change * randn(f_shape);
         end
         self.raw(:, 1:n_controls) = f;
-        self.set_raw(self.raw);
+        self.transform();
     end
 
 
