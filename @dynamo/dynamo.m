@@ -159,7 +159,8 @@ classdef dynamo < matlab.mixin.Copyable
                 config.f_max = (sys.norm2 +norm2(sys.X_initial)) / 2;
 
               case {'ket', 'gate'}
-                if strcmp(task_str, 'ket')
+                task_is_ket = strcmp(task_str, 'ket');
+                if task_is_ket
                     out = strcat(out, ' pure state transfer');
                     if any(input_rank ~= 1)
                         error('Initial and final states should be normalized kets.')
@@ -172,13 +173,19 @@ classdef dynamo < matlab.mixin.Copyable
                 end
                 sys.hilbert_representation(initial, final, A, B, false);
                 config.f_max = sys.norm2;
-                if strcmp(extra_str, 'phase')
+                switch extra_str
+                  case 'phase'
                     out = strcat(out, ' (with global phase (NOTE: unphysical!))');
                     config.nonprojective_error = true;
-                else
+                  case 'subspace'
+                    if task_is_ket
+                        error('Subspace option only available for gates.')
+                    end
+                    out = strcat(out, sprintf(' (on a %d-dimensional subspace)', round(sys.norm2)));
+                  otherwise
                     out = strcat(out, ' (ignoring global phase)');
                 end
-                
+
               % system S + environment E
               case 'state_partial'
                 error('unfinished, gradient is complicated')

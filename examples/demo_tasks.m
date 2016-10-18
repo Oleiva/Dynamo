@@ -17,6 +17,7 @@ Z = [1, 0; 0, -1];
 % q-qubit Heisenberg chain
 
 q = 2;                 % number of qubits
+D_sub = 3;             % dimension of the interesting subspace (if applicable)
 qs = 1;                % number of system qubits (if applicable)
 dim = 2 * ones(1, q);  % dimension vector
 D = prod(dim);         % total dimension
@@ -103,6 +104,14 @@ switch task
     initial = eye(D);
     final = qft(q);
     T = 1.6;
+
+  case 'closed gate subspace'
+    % random gate on a subspace
+    initial = eye(D);
+    % pad the non-interesting parts of final with zeroes
+    P = [eye(D_sub), zeros(D_sub, D-D_sub)];
+    final = P' * rand_U(D_sub) * P
+    T = 3;
 
   case 'closed state_partial'
     % first qubit to |1>
