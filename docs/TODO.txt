@@ -51,10 +51,13 @@ TODO list for Dynamo 2
      (7) Bibliography/references
 
 6. More optimization tasks
-      1. Closed S+E, where we only care about S
+      1. Closed S, where we only care about a given subspace
+          (*) unitary gates
+      2. Closed S+E, where we only care about S
            * (unitary gates), state transfer
-      2. Open S+E, Markovian evolution, where we only care about S.
+      3. Open S+E, Markovian evolution, where we only care about S.
            * unitary gates/general maps, (state transfer)
+     (4) Co-operative gates using the projector technique
 
 7. More algorithms
       1. "Integrators"
@@ -136,8 +139,6 @@ Random ideas and things to test:
 - save/reload/resume
 
 - update manual, explain important classes and methods
-
-- task: like gate_partial, except ignoring one subspace/block entirely?
 
 - task: states/unitaries divided into blocks, where phase differences between blocks are unimportant?
   left multiply U with the corresponding phase gate, minimize error over the phases.

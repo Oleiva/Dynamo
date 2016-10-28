@@ -23,7 +23,8 @@ classdef cache < matlab.mixin.Copyable
   end
 
   properties (Access = public)
-      H_needed_now  % flags, Q[timeslice]
+      %% logical arrays, Q(timeslice)
+      H_needed_now
       P_needed_now
       U_needed_now
       L_needed_now
@@ -35,14 +36,15 @@ classdef cache < matlab.mixin.Copyable
   end
 
   properties (Access = private)
-      H_is_stale  % flags, Q[timeslice]
+      %% logical arrays, Q(timeslice)
+      H_is_stale
       P_is_stale
       U_is_stale
       L_is_stale
       g_is_stale  % scalar
       
       calcPfromHfunc
-      UL_mixed  % flag: use mixed states in Hilbert space representation?
+      UL_mixed  % flag: U and L are density matrices in Hilbert space representation and are propagated from both sides
   end
 
   methods
@@ -67,7 +69,6 @@ classdef cache < matlab.mixin.Copyable
               self.calcPfromHfunc = @calcP_expm;
           end
           self.UL_mixed = UL_hack;
-
           self.H = cell(s_full);
           self.P = cell(s_full);
           self.U = cell(s_full + [1, 0]); % one more timeslot
@@ -134,7 +135,7 @@ classdef cache < matlab.mixin.Copyable
 
 
       function set_P(self, t, k, P)
-      % Sets P{t, k} to the given value.
+      % Sets P{t, k} to the given value. FIXME TODO should it be set for every ensemble member?
           self.P{t, k} = P;
           self.H{t, k} = NaN;
           % mark U, L and g as stale, P and H as not stale.
@@ -233,21 +234,26 @@ classdef cache < matlab.mixin.Copyable
 
           % Compute the Us - forward propagation (we never recompute U{1})
           % Compute the Ls - adjoint system propagation
-          if self.UL_mixed
-              % mixed states, unitary evolution: propagate from both sides
-              for t=u_idx
-                  self.U{t, k} = self.P{t-1, k} * self.U{t-1, k} * self.P{t-1, k}';
+          for t=u_idx
+              temp = self.P{t-1, k}; % NOTE t-1, because U{1} is the initial state
+              if isa(temp, 'function_handle')
+                  self.U{t, k} = temp(t-1, self.U{t-1, k}, false);
+              elseif self.UL_mixed
+                  % mixed states, unitary evolution: propagate from both sides
+                  self.U{t, k} = temp * self.U{t-1, k} * temp';
+              else
+                  % propagate U from left, L from right
+                  self.U{t, k} = temp * self.U{t-1, k};
               end
-              for t=el_idx
-                  self.L{t, k} = self.P{t, k}' * self.L{t+1, k} * self.P{t, k};
-              end
-          else
-              % propagate U from left, L from right
-              for t=u_idx
-                  self.U{t, k} = self.P{t-1, k} * self.U{t-1, k};
-              end
-              for t=el_idx
-                  self.L{t, k} = self.L{t+1, k} * self.P{t, k};
+          end
+          for t=el_idx
+              temp = self.P{t, k};
+              if isa(temp, 'function_handle')
+                  self.L{t, k} = temp(t, self.L{t+1, k}, true);
+              elseif self.UL_mixed
+                  self.L{t, k} = temp' * self.L{t+1, k} * temp;
+              else
+                  self.L{t, k} = self.L{t+1, k} * temp;
               end
           end
 
@@ -382,6 +388,20 @@ classdef cache < matlab.mixin.Copyable
           end
           self.U_needed_now(t) = true;
           self.L_needed_now(t) = true;
+      end
+
+
+      function ret = combined_propagator(self, first, last)
+      % Returns the combined propagator for time slices first:last,
+      % corresponding to propagation from t_{first-1} to t_{last}.
+
+          if first > last
+              error('The first bin number must be less than or equal to the last.')
+          end
+          ret = self.P{first};
+          for k=first+1:last
+              ret = self.P{k} * ret;
+          end
       end
   end
 end

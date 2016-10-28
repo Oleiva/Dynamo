@@ -45,4 +45,6 @@ b bugfix
 1.4.1       in progress
               * init: added the examples directory to the path
               * New task 'closed gate subspace' for the cases where you only care about what happens in a specific subspace.
+              * Optimizing co-operative gates/state transfers in open and closed systems using the projector technique.
               + control_seq/transform
+              + cache/combined_propagator
