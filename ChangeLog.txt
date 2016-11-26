@@ -46,5 +46,6 @@ b bugfix
               * init: added the examples directory to the path
               * New task 'closed gate subspace' for the cases where you only care about what happens in a specific subspace.
               * Optimizing co-operative gates/state transfers in open and closed systems using the projector technique.
+              * utils/control_ops:  Normalization changed for the Liouvillians (now lowest eigenvalue == -1)
               + control_seq/transform
               + cache/combined_propagator
