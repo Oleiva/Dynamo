@@ -828,6 +828,33 @@ Gradient:
 \end{align}
 
 
+\subsubsection{Unitary propagator on a subspace $\I \to U_f$}
+\label{sec:closed-u-sub}
+In this task we wish to generate a unitary gate~$U_f$ up to global
+phase on an $m$-dimensional subspace of the full Hilbert space.
+We assume that we have already rotated the Hilbert space gens and~$U_i$ such that
+the subspace of interest forms the first~$m$ rows and columns of the propagators.
+$X$~is a unitary operator on~$\hilb{H}$, and
+thus $\|X\|^2 = \tr(X^\dagger X) = \tr(\I) = \dim \hilb{H}$.
+
+Since global phase does not matter, the error function is
+obtained by minimizing over $W \in U(N-m)$
+\begin{align}
+\notag
+E
+&= \min_{W, \phi} D(e^{i \phi} U_T \oplus W, B)
+= 1 -\max_{W, \phi} \frac{1}{N} \re \tr \left(e^{-i \phi} (U_T^\dagger \oplus W^\dagger) B\right)\\
+\notag
+&= 1 -\max_{W} \frac{1}{N} \left|\tr ((U_T^\dagger \oplus W^\dagger) B)\right|
+= 1 -\max_{W} \frac{1}{N} \left|\tr (U_T^\dagger B_{(1,1)}) +\tr (W^\dagger B_{(2,2)})\right|\\
+&= 1 -\max_{W'} \frac{1}{N} \left|\tr (U_T^\dagger B_{(1,1)}) +\tr (\Sigma W')\right|
+= 1 -\frac{1}{N} \left(\left|\tr (U_T^\dagger B_{(1,1)})\right| +\left\|B_{(2,2)}\right\|_{\tr} \right),
+\end{align}
+where we used the SVD $B_{(2,2)} = U \Sigma V^\dagger$.
+
+
+
+
 
 \subsection{Open system with a Markovian bath}
 
@@ -1021,6 +1048,68 @@ $-\frac{1}{\|A\|^2} \re \left(\frac{g^*}{|g|} \dd{g}{u} \right)$.\\
 Note also the $2 \re$ in the gradient expression  
 for the special case of mixed state transfer in a closed system.
 
+
+\subsection{Modified optimization tasks}
+
+\subsubsection{State operator propagation interspersed with arbitrary linear maps}
+
+In the closed and open state operator transfer tasks we may wish to apply additional fixed linear maps~$Q$
+on the state at various points during the sequence, for example to optimize for gate co-operativity.
+For the gradient computation it seems that the maps have to be applied to the $U$ and~$L$ objects.
+
+We can implement them using additional bins, and remove the extra bin from the gradient mask so that it is never updated.
+In the simplest case (full Liouville space) the $P_k$ in the extra bin is replaced by~$Q$. More generally, we may
+use a bin-specific callback function that is given the previous $U$ or~$L$ object as input,
+and returns the mapped object.
+
+In the open-system case we use the full Liouville space in which the $Q$~maps are just matrices
+that act by left multiplication on~$U$, and by right multiplication on~$L$:
+\begin{align*}
+\tr(L_{k+1} U_{k+1})
+&= \tr(L_{k+1} (Q U_{k}))
+= \tr((L_{k+1} Q) U_{k})
+= \tr(L_{k} U_{k}).
+\end{align*}
+
+
+In the absence of noise the closed-system case is way more efficient but also more complicated because we work in a Hilbert space.
+The maps cannot generally be implemented using conjugation (like the unitary propagators).
+Instead we can use a Kraus-like decomposition, $Q(\rho) = \sum_j A_j \rho B_j$,
+which is general enough for an arbitrary~$Q$:
+\begin{align}
+U_{k+1} &= Q(U_k) = \sum_j A_j U_k B_j,\\
+L_{k} &= Q'(L_{k+1}) = \sum_j B_j L_{k+1} A_j.
+\end{align}
+This way
+\begin{align*}
+\tr(L_{k+1} U_{k+1})
+&= \tr(L_{k+1} Q(U_k))
+= \sum_j \tr(L_{k+1} A_j U_k B_j)
+= \sum_j \tr(B_j L_{k+1} A_j U_k)\\
+&= \tr(Q'(L_{k+1}) U_k)
+%&= \inprod{L_{k+1}^\dagger}{U_{k+1}}
+%= \inprod{L_{k+1}^\dagger}{Q(P_k U_k P_k^\dagger)}
+%= \sum_j \inprod{L_{k+1}^\dagger}{A_j P_k U_k P_k^\dagger B_j}
+%= \sum_j \inprod{\cvec(L_{k+1}^\dagger)}{\cvec(A_j P_k U_k P_k^\dagger B_j)}\\
+%&= \sum_j \inprod{\cvec(L_{k+1}^\dagger)}{(B_j^T P_k^* \otimes A_j P_k)\cvec(U_k)}
+%= \sum_j \inprod{(B_j^T P_k^* \otimes A_j P_k)^\dagger \cvec(L_{k+1}^\dagger)}{\cvec(U_k)}
+%= \sum_j \inprod{(P_k^T B_j^* \otimes P_k^\dagger A_j^\dagger) \cvec(L_{k+1}^\dagger)}{\cvec(U_k)}\\
+%&= \sum_j \inprod{\cvec(P_k^\dagger A_j^\dagger L_{k+1}^\dagger B_j^\dagger P_k)}{\cvec(U_k)}
+%= \sum_j \inprod{P_k^\dagger A_j^\dagger L_{k+1}^\dagger B_j^\dagger P_k}{U_k}
+= \tr(L_{k} U_{k})
+\end{align*}
+as it should.
+A slightly faster and easier way is to vectorize the Hilbert space operators, apply the $Q$~superop, and de-vectorize:
+\begin{align*}
+\tr(L_{k+1} U_{k+1})
+&= \tr(L_{k+1} \cvec^{-1}(Q \cvec(U_{k})))
+= \tr(\cvec^{-1}(Q' \cvec(L_{k+1})) U_{k})
+= \tr(L_{k} U_{k}).
+\end{align*}
+The $Q'$ superop is obtained by transposing~$Q$, and conjugating it with SWAPs.
+
+For the gradient we assume for simplicity that $Q(\rho)^\dagger = Q(\rho^\dagger)$ (or that $Q$ is HP???).
+This given, all $U$ and~$L$??? will be hermitian, and we obtain the usual gradient formula.
 
 
 
