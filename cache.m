@@ -9,10 +9,11 @@ classdef cache < matlab.mixin.Copyable
       %% cell arrays: Q{timeslice, ensemble_index}
       H  % Generator for a time slice. Not just the Hamiltonian, see below.
       P  % Propagator for a time slice, computed by calcPfromHfunc. With a constant H, P == expm(dt * H). 
-      U  % Forward propagators. U{k+1} = P{k} * U{k}
+      U  % Initial state propagated forward. U{k+1} = P{k} * U{k}
          % U{k} is the system at t = sum(tau(1:(k-1))) = t_{k-1}
-      L  % Backward propagators. L{k-1} = L{k} * P{k-1};
+      L  % Final (target) state propagated backward. L{k-1} = L{k} * P{k-1}
          % L{k} is the adjoint system at t = sum(tau(1:(k-1))) = t_{k-1}
+         % Exception: With error_full, L is the full backwards propagator.
 
       H_v           % eigendecomposition data for dt*H, updated when P is updated  
       H_eig_factor  % likewise
