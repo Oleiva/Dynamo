@@ -108,13 +108,12 @@ mask = dyn.full_mask(false);
 % replace the propagator in the middle bin by P_xy
 t = ceil(n_bins/2);
 if use_liouville_space
-    %dyn.cache.set_P(t, 1, P_xy);
-    dyn.cache.set_P(t, 1, @proj_liouville);
+    %temp = dyn.set_state_transform(t, 1, P_xy);
+    temp = dyn.set_state_transform(t, 1, @proj_liouville);
 else
-    dyn.cache.set_P(t, 1, @proj_hilbert);
+    temp = dyn.set_state_transform(t, 1, @proj_hilbert);
 end
-mask(t,:) = false;  % do not update the controls so as to not overwrite P_xy
-dyn.seq.raw(t, 1:end-1) = 0; % set the phantom controls to zero to make the sequence look nicer
+mask = mask & temp;  % avoid clobbering it during update
 
 
 %% Optimize and test the result

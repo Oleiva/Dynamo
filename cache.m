@@ -137,8 +137,10 @@ classdef cache < matlab.mixin.Copyable
 
       function set_P(self, t, k, P)
       % Sets P{t, k} to the given value. FIXME TODO should it be set for every ensemble member?
-          self.P{t, k} = P;
-          self.H{t, k} = NaN;
+          for ind = t
+              self.P{ind, k} = P;
+              self.H{ind, k} = NaN;
+          end
           % mark U, L and g as stale, P and H as not stale.
           self.mark_as_stale(t);
           self.P_is_stale(t) = false;

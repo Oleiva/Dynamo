@@ -7,7 +7,7 @@ classdef qsystem < matlab.mixin.Copyable
     description = ''    % description string
     dim                 % dimension (or dim vector) of the Hilbert space of the full system S+E
     dimSE               % total dimensions of S (the part we're interested in) and the environment E, as a two-vector
-    liouville = false   % Do the system objects X reside in Liouville or Hilbert space?
+    type = 'hilbert';   % Do the system objects X reside in Liouville or Hilbert space?
 
     weight = 1          % vector, length == n_ensemble, weights for the ensemble samples
     A                   % cell vector of drift generators, size == [n_ensemble, 1]
@@ -159,6 +159,7 @@ classdef qsystem < matlab.mixin.Copyable
     function abstract_representation(self, i, f, A, B)
     % X_ are abstract Hilbert space objects (vectors or matrices).
 
+        self.type = 'abstract';
         self.X_initial = i;
         self.X_final = f;
         self.norm2 = norm2(self.X_final);
@@ -174,6 +175,7 @@ classdef qsystem < matlab.mixin.Copyable
     % For _partial tasks, i \in SE, f \in S.
     % (NOTE: the generators are not pure Hamiltonians, there's an extra -1i!)
         
+        self.type = 'hilbert';
         self.X_initial = i;
         if gate_partial
             % only with gate_partial
@@ -195,8 +197,7 @@ classdef qsystem < matlab.mixin.Copyable
     % X_ are Liouville space vectors/operators corresponding to vec-torized state operators / unitary gates.
     % Used for open system tasks: state, state_partial, gate, (TODO gate_partial).
 
-        self.liouville = true;
-        
+        self.type = 'liouville';
         if use_states
             % state vectors are converted to state operators
             self.X_initial = vec(to_op(i));

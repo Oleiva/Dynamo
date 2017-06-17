@@ -239,6 +239,23 @@ classdef control_seq < matlab.mixin.Copyable
     end
 
 
+    function clip(self, limit)
+    % Clips the controls according to the limits in the limit vector.
+
+        n_timeslots = self.n_timeslots();
+        n_controls = self.n_controls();
+        t_shape = [n_timeslots, 1];
+        limit = ones(t_shape) * limit;
+
+        f = self.raw(:, 1:n_controls);
+        mask = f > limit;
+        f(mask) = limit(mask);
+        mask = f < -limit;
+        f(mask) = -limit(mask);
+        self.raw(:, 1:n_controls) = f;
+        self.transform();
+    end
+
     function shake(self, rel_change, abs_change, t_dependent)
     % Makes a small random perturbation to the control sequence, can be used
     % to shake the system out of a local optimum.
@@ -254,8 +271,8 @@ classdef control_seq < matlab.mixin.Copyable
         f = self.raw(:, 1:n_controls);
         if ~t_dependent
             % perturb each control field randomly
-            p_abs = ones(t_shape) * abs_change * randn(c_shape);
-            p_rel = ones(t_shape) * (1 +rel_change * randn(c_shape));
+            p_abs = ones(t_shape) * (abs_change .* randn(c_shape));
+            p_rel = ones(t_shape) * (1 +rel_change .* randn(c_shape));
             f = f .* p_rel +p_abs;
         else
             % add some time-dependent noise on top of the raw controls

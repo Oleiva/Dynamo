@@ -276,9 +276,12 @@ classdef dynamo < matlab.mixin.Copyable
         end
 
         fprintf(out);
-        if sys.liouville
+        switch sys.type
+          case 'liouville'
             fprintf('Liouville space dimension: %d\n', sys.dim^2);
-        else
+          case 'abstract'
+            fprintf('Vector space dimension: %d\n', sys.dim);
+          otherwise
             fprintf('Hilbert space dimension: %d\n', sys.dim);
         end
         n_ensemble = sys.n_ensemble();
@@ -330,6 +333,17 @@ classdef dynamo < matlab.mixin.Copyable
         self.cache_init();
     end
 
+    function mask = set_state_transform(self, t, k, P)
+    % Replaces the propagator for time slice t with an arbitrary state transform,
+    % e.g. a subspace projector.
+        self.cache.set_P(t, k, P);
+        self.seq.raw(t, 1:end-1) = pi/2;  % set the phantom controls to zero to make the sequence look nicer
+        self.seq.transform();
+        % do not update the controls so as to not overwrite P_xy
+        % TODO better solution needed
+        mask = self.full_mask(true);
+        mask(t,:) = false;
+    end
 
     function mask = full_mask(self, optimize_tau)
     % Returns a full control mask.
@@ -562,7 +576,13 @@ classdef dynamo < matlab.mixin.Copyable
     function plot_stats(self, stat, ax)
     % Plots the optimization stats (like the error) as a function of wall time.
 
-        [stat, pt] = strtok(stat);
+        [stat, tail] = strtok(stat);
+        [pt, tail] = strtok(tail);
+        if isempty(tail)
+            marker = '-';
+        else
+            marker = tail;
+        end
         % plot type
         switch strtok(pt)
           case 'semilog'
@@ -581,7 +601,7 @@ classdef dynamo < matlab.mixin.Copyable
         offset = 0;
         for k=1:length(self.stats)
             temp = getfield(self.stats{k}, stat);
-            fp(ax, self.stats{k}.wall_time+offset, temp, '-');
+            fp(ax, self.stats{k}.wall_time+offset, temp, marker);
             hold(ax, 'on');
             fp(ax, self.stats{k}.wall_time(end)+offset, temp(end), 'o');
             offset = offset +self.stats{k}.wall_time(end);
@@ -597,12 +617,14 @@ classdef dynamo < matlab.mixin.Copyable
     % control sequence.
 
         % what should we plot?
-        if self.system.liouville
-            plot_func = @prob_stateop;
-        else
-            plot_func = @prob_ket;
-        end
-
+         switch self.system.type
+           case 'liouville'
+             plot_func = @prob_stateop;
+           case 'abstract'
+             plot_func = @(x) x;
+           otherwise
+             plot_func = @prob_ket;
+         end
         self.plot_X(plot_func, varargin{:});
 
         % NOTE: due to the horrible scoping rules of MATLAB, we use small x
@@ -623,12 +645,12 @@ classdef dynamo < matlab.mixin.Copyable
     function plot_eig(self, varargin)
 
         % what should we plot?
-        if self.system.liouville
+        switch self.system.type
+          case 'liouville'
             plot_func = @eig_stateop;
-        else
+          otherwise
             error('System closed, eigenvalues are constant.')
         end
-
         self.plot_X(plot_func, varargin{:});
 
         function p = eig_stateop(x)
@@ -651,10 +673,13 @@ classdef dynamo < matlab.mixin.Copyable
             ax = gca();
         if nargin < 4
             k = 1; % TODO should match the choice in X()
+        if nargin < 3
+            dt = [];
         end
         end
         end
-
+        end
+        
         if full_plot
             % things that don't change and aren't deleted by cla
             set_plotstyle(ax);
@@ -672,7 +697,7 @@ classdef dynamo < matlab.mixin.Copyable
 
         [res, t] = self.evaluate_X(ev_func, dt, k);
         plot(ax, t, res);
-        axis(ax, [0, t(end), 0, 1]);
+        %axis(ax, [0, t(end), 0, 1]);
         legend(self.system.state_labels, 'interpreter', 'latex');
     end
 
