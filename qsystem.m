@@ -17,6 +17,7 @@ classdef qsystem < matlab.mixin.Copyable
     X_initial           % initial state
     X_final             % final state
     norm2               % squared norm of final state
+    penalty = []        % penalty functional (vector) for forbidden states etc.
     TU = []             % time unit for generators, in seconds. \hat{A} = A * TU etc.
     state_labels   = {} % names for the Hilbert space computational basis states
     control_labels = {} % names for the controls

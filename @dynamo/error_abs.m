@@ -5,10 +5,10 @@ function ret = error_abs(self, k, t, c)
 %  Separately implemented for performance reasons.
 %
 %  err  = error_abs(self, k)
-%    E_abs(A,B) in ensemble k.
+%    E_abs(A,B) in ensemble member k.
 %
 %  grad = error_abs(self, k, t, c)
-%    Gradient of E_abs(A,B) in ensemble k, with respect to
+%    Gradient of E_abs(A,B) in ensemble member k, with respect to
 %    control field c, at time slice t.
 
 % g(A,B) = \tr_S(A'*B) is enough to compute the error function

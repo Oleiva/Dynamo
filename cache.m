@@ -31,9 +31,14 @@ classdef cache < matlab.mixin.Copyable
       L_needed_now
       g_needed_now  % scalar
       
-      E        = NaN  % gradient_*_finite_diff: cached error
+      E        = NaN  % finite diff gradient calculation: cached error
       VUdagger = NaN  % cached SVD data for error_tr, error_abs
       int  = []   % TEST, integrator
+
+      % TEST, for the gradient of the penalty functional
+      dPdu_tail  = NaN
+      dPdu_scale = NaN
+      pen = NaN;
   end
 
   properties (Access = private)

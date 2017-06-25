@@ -2,10 +2,10 @@ function ret = error_tr(self, k, t, c)
 % Error function for closed S+E.
 %
 %  err  = error_tr(self, k)
-%    E_tr(A,B) in ensemble k.
+%    E_tr(A,B) in ensemble member k.
 %
 %  grad = error_tr(self, k, t, c)
-%    Gradient of E_tr(A,B) in ensemble k, with respect to
+%    Gradient of E_tr(A,B) in ensemble member k, with respect to
 %    control field c, at time slice t.
 
 

@@ -4,6 +4,7 @@ function init_opt(self)
 %% statistics
 
 self.opt.error = self.compute_error();
+self.opt.penalty = self.cache.pen;
 self.opt.wall_time = 0;
 self.opt.cpu_time  = 0;
 self.opt.control_integral  = self.seq.integral();

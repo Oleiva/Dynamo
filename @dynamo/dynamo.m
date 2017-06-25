@@ -106,6 +106,7 @@ classdef dynamo < matlab.mixin.Copyable
         config.frobenius_like_error = true;  % error can be interpreted as |A-B|_F^2 / (2 * |A|_F^2)
         config.epsilon  = 2e-8;   % finite differencing: approximately sqrt(eps(double))
         config.UL_mixed = false;  % HACK: mixed states in a closed system
+        config.penalty_scale = 0; % TEST: penalty functionals
 
         %% Description of the physical system
 
@@ -391,6 +392,11 @@ classdef dynamo < matlab.mixin.Copyable
             % _tr, _abs:
             self.cache.g_needed_now = true;
         end
+        if ~isempty(self.system.penalty)
+            % TODO for now we need every single U for penalty
+            % calc, L:s are not useful here
+            self.cache.U_needed_now(:) = true;
+        end
         
         self.cache_refresh(); % this call does the heavy computing (expm etc.)
 
@@ -406,26 +412,36 @@ classdef dynamo < matlab.mixin.Copyable
             pick = ensemble_idx;
             weight = ones(1, n_ensemble);
         end
+        if nargout >= 2
+            % stuff for computing the gradient
+            % tau are the last column of the controls
+            tau_c = size(control_mask, 2);
+            grad = NaN(nnz(control_mask), 1);
+            gpen = zeros(size(grad));
+            [Ts, Cs] = ind2sub(size(control_mask), find(control_mask));
+        end
+
+        %% loop over the ensemble
         for k = pick
             %% (real) normalized error
             err = self.config.error_func(self, k) / self.system.norm2;
-            fprintf('Error (%d): %g\n', k, err);
+            if ~isempty(self.system.penalty)
+                pen = self.error_penalty(k);
+                fprintf('(%d) error: %g, penalty: %g\n', k, err, pen);
+            else
+                pen = 0;
+                fprintf('(%d) error: %g\n', k, err);
+            end
 
             % weighted ensemble average
-            err_out = err_out +weight(k) * err;
+            err_out = err_out +weight(k) * (err +self.config.penalty_scale * pen);
             if nargout < 2
                 % just the error
                 continue
             end
 
             %% gradient
-
-            % tau are the last column of the controls
-            tau_c = size(control_mask, 2);
-
             % iterate over the true elements of the mask
-            grad = zeros(nnz(control_mask), 1);
-            [Ts, Cs] = ind2sub(size(control_mask), find(control_mask));
             for z = 1:length(Ts)
                 %fprintf('.');
                 t = Ts(z);
@@ -434,9 +450,14 @@ classdef dynamo < matlab.mixin.Copyable
                     c = -1; % denotes a tau control
                 end
                 grad(z) = self.config.error_func(self, k, t, c);
+                % TEST penalty gradient
+                if ~isempty(self.system.penalty)
+                    gpen(z) = self.error_penalty(k, t, c);
+                end
             end
             % real, normalized, weighted gradient
             grad_out = grad_out +(weight(k) / self.system.norm2) * grad;
+            grad_out = grad_out +(weight(k) * self.config.penalty_scale) * gpen;
         end
     end
 

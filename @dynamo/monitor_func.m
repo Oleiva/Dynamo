@@ -62,6 +62,7 @@ end
 %% Stats collector part
 
 self.opt.error(end+1) = optimValues.fval;
+self.opt.penalty(end+1) = self.cache.pen;
 self.opt.wall_time(end+1) = wt;
 self.opt.cpu_time(end+1)  = ct;
 self.opt.control_integral(end+1,:) = self.seq.integral();
