@@ -50,11 +50,10 @@ classdef cache < matlab.mixin.Copyable
       g_is_stale  % scalar
       
       calcPfromHfunc
-      UL_mixed  % flag: U and L are density matrices in Hilbert space representation and are propagated from both sides
   end
 
   methods
-      function self = cache(n_timeslots, n_ensemble, U_start, L_end, dP_method, UL_hack)
+      function self = cache(n_timeslots, n_ensemble, U_start, L_end, dP_method)
       % Set up caching (once we know the number of time slices and U and L endpoints).
 
           s_time     = [1, n_timeslots];
@@ -74,7 +73,6 @@ classdef cache < matlab.mixin.Copyable
             otherwise
               self.calcPfromHfunc = @calcP_expm;
           end
-          self.UL_mixed = UL_hack;
           self.H = cell(s_full);
           self.P = cell(s_full);
           self.U = cell(s_full + [1, 0]); % one more timeslot
@@ -153,7 +151,7 @@ classdef cache < matlab.mixin.Copyable
       end
 
 
-      function refresh(self, sys, tau, fields)
+      function refresh(self, sys, tau, fields, config)
       % This function does most of the heavy computing.
       % It should be called _after_ setting _all_ the required *_needed_now fields
       % to minimize unnecessary computational work.
@@ -246,8 +244,8 @@ classdef cache < matlab.mixin.Copyable
               temp = self.P{t-1, k}; % NOTE t-1, because U{1} is the initial state
               if isa(temp, 'function_handle')
                   self.U{t, k} = temp(t-1, self.U{t-1, k}, false);
-              elseif self.UL_mixed
-                  % mixed states, unitary evolution: propagate from both sides
+              elseif config.UL_mixed
+                  % mixed states, unitary evolution: U and L are density matrices in Hilbert space representation and are propagated from both sides
                   self.U{t, k} = temp * self.U{t-1, k} * temp';
               else
                   % propagate U from left, L from right
@@ -258,7 +256,7 @@ classdef cache < matlab.mixin.Copyable
               temp = self.P{t, k};
               if isa(temp, 'function_handle')
                   self.L{t, k} = temp(t, self.L{t+1, k}, true);
-              elseif self.UL_mixed
+              elseif config.UL_mixed
                   self.L{t, k} = temp' * self.L{t+1, k} * temp;
               else
                   self.L{t, k} = self.L{t+1, k} * temp;
@@ -267,21 +265,22 @@ classdef cache < matlab.mixin.Copyable
 
           % and finally g := trace_q(L{g_ind} * U{g_ind})
           if g_recompute_now
-              if self.g_needed_now == 2  % HACK ln37ae983e
+              if isequal(config.error_func, @error_full)
                   % error_full, L:s are full propagators, partial trace over E gives X_S
                   temp = self.L{g_ind, k} * self.U{g_ind, k};
                   self.g{k} = partial_trace(temp, sys.dimSE, 2);
               
-              elseif sys.dimSE(2) == 1
-                  % error_abs, no environment E, full trace, g is a scalar
-                  self.g{k} = trace_matmul(self.L{g_ind, k}, self.U{g_ind, k});
-              
               else
-                  % error_tr, partial trace over S, g is a matrix
-                  temp = self.L{g_ind, k} * self.U{g_ind, k};
-                  self.g{k} = partial_trace(temp, sys.dimSE, 1);
+                  if sys.dimSE(2) == 1
+                      % error_abs, no environment E, full trace, g is a scalar
+                      % NOTE: this is slightly faster code for a special case of the more general case below
+                      self.g{k} = trace_matmul(self.L{g_ind, k}, self.U{g_ind, k});
+                  else
+                      % error_tr, partial trace over S, g is a matrix
+                      temp = self.L{g_ind, k} * self.U{g_ind, k};
+                      self.g{k} = partial_trace(temp, sys.dimSE, 1);
+                  end
               end
-              % TODO combine last 2 cases somehow?
           end
 
       end % loop over ensemble

@@ -316,9 +316,7 @@ classdef dynamo < matlab.mixin.Copyable
         else
             L_end = self.system.X_final'; % L: X_final' propagated backwards
         end
-
-        % UL_mixed: mixed states in a closed system
-        self.cache = cache(self.seq.n_timeslots(), self.system.n_ensemble(), U_start, L_end, self.config.dP, self.config.UL_mixed);
+        self.cache = cache(self.seq.n_timeslots(), self.system.n_ensemble(), U_start, L_end, self.config.dP);
     end
 
 
@@ -378,20 +376,13 @@ classdef dynamo < matlab.mixin.Copyable
             control_mask = self.full_mask(false);
         end
 
+        % set up stuff for the error functions
         if nargout == 2
             % since g can be computed using any U and L, it might be
             % cheaper to set up the gradient first...
             self.gradient_setup(control_mask);
         end
-
-        % set up stuff for the error functions
-        if isequal(self.config.error_func, @error_full)
-            % _full:
-            self.cache.g_needed_now = 2; % HACK ln37ae983e
-        else
-            % _tr, _abs:
-            self.cache.g_needed_now = true;
-        end
+        self.cache.g_needed_now = true;
         if ~isempty(self.system.penalty)
             % TODO for now we need every single U for penalty
             % calc, L:s are not useful here
@@ -536,7 +527,7 @@ classdef dynamo < matlab.mixin.Copyable
 
     function cache_refresh(self)
     % Performs all the queued computations using the cache subsystem.
-        self.cache.refresh(self.system, self.seq.tau, self.seq.fields);
+        self.cache.refresh(self.system, self.seq.tau, self.seq.fields, self.config);
     end
     
 
@@ -545,17 +536,15 @@ classdef dynamo < matlab.mixin.Copyable
     % Used mostly for debugging (since it essentially overrides all matrix-op optimization mechanisms).
 
         self.cache.invalidate();
-
         self.cache.H_needed_now(:) = true;
         self.cache.P_needed_now(:) = true;
         self.cache.U_needed_now(:) = true;
         self.cache.L_needed_now(:) = true;
         self.cache.g_needed_now    = true;
-        
         self.cache_refresh();
     end
-    
-  
+
+
     function ret = X(self, j, k)
     % Returns X(t_j), the controlled system at time t_j.
     % If no j is given, returns the final state X(t_n).
