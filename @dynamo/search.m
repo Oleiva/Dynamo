@@ -1,23 +1,16 @@
-function term_reason = search(self, control_mask, varargin)
+function term_reason = search(self, varargin)
 % Run the optimization.
-% If control_mask is empty, try to continue the previous optimization.
 
-if nargin < 2
-    % by default update all the controls except taus
-    control_mask = self.full_mask(false);
-end
 
 %% MATLAB-style options processing.
 % Converts a list of fieldname, value pairs in varargin to a struct.
 user_options = struct(varargin{:});
 
-if isempty(control_mask)
-    % continue previous optimization (re-use most of the opt struct)
-    control_mask = self.opt.control_mask;
-    % self.opt.control_mask, self.opt.options and self.opt.matlab_options are kept as is
-else
-    % default termination conditions and other options
+if isempty(self.opt)
+    % no previous optimization rounds, this is the first one
+    % set default termination conditions and other options
     self.opt.options = struct(...
+        'control_mask',      self.seq.mask,...  % default mask
         'error_goal',        0.5 * (1e-4)^2 / self.system.norm2,...
         'max_evals',         1e6,...
         'max_walltime',      1800,...
@@ -25,10 +18,14 @@ else
         'min_gradient_norm', 1e-20,...
         'plot_interval',     1);   % how often should we plot intermediate results?
     self.opt.matlab_options = struct();
+else
+    % there has been at least one optimization round before
+    % copy all the options from the last round, modify them with the user input.
 end
+
 % initialization of the optimization data structures
+% self.opt.options and self.opt.matlab_options are kept as is.
 self.init_opt();
-self.opt.control_mask = control_mask;
 
 % modify self.opt.options with user_options (if any)
 [self.opt.options, unused] = apply_options(self.opt.options, user_options, true);
@@ -38,7 +35,7 @@ self.opt.control_mask = control_mask;
 
 %% run the optimizer
 
-fprintf('Optimization space dimension: %d\n', sum(sum(self.opt.control_mask)));
+fprintf('Optimization space dimension: %d\n', sum(sum(self.opt.options.control_mask)));
 
 % define the optimization problem
 obj_func = @(x) goal_and_gradient_function_wrapper(self, x);
@@ -69,7 +66,7 @@ function [err, grad] = goal_and_gradient_function_wrapper(self, x)
 
     self.opt.n_eval = self.opt.n_eval +1;
 
-    self.update_controls(x, self.opt.control_mask);
-    [err, grad] = self.compute_error(self.opt.control_mask);
+    self.update_controls(x, self.opt.options.control_mask);
+    [err, grad] = self.compute_error(self.opt.options.control_mask);
     self.opt.last_grad_norm = sqrt(sum(sum(grad .* grad)));
 end

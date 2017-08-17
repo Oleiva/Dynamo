@@ -21,7 +21,7 @@ self.opt.matlab_options = opt;
 opt.OutputFcn = @(x, optimValues, state) monitor_func(self, x, optimValues, state);
 
 % initial values
-x0 = self.seq.get_raw(self.opt.control_mask);
+x0 = self.seq.get_raw(self.opt.options.control_mask);
 
 if 0
     % TEST: New BFGS implementation
@@ -49,7 +49,7 @@ else
 end
 
 % minimizer may be different than the last point evaluated
-self.update_controls(x, self.opt.control_mask);
+self.update_controls(x, self.opt.options.control_mask);
 end
 
 

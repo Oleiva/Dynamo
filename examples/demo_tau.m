@@ -53,13 +53,12 @@ dyn.seq_init(3, T * [0.5, 1], control_type, control_par);
 dyn.set_controls(rand());
 
 % optimize taus as well
-mask = dyn.full_mask(true);
-%mask(:,1) = 0
+dyn.seq.mask = dyn.seq.full_mask(true);
 
 
 %% Now do the actual search
 
 dyn.ui_open();
-dyn.search(mask, 'Display', 'final', 'plot_interval', 1);
+dyn.search('Display', 'final', 'plot_interval', 1);
 %dyn.analyze();
 end

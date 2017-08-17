@@ -2,7 +2,7 @@ classdef cache < matlab.mixin.Copyable
 % Copyable handle class for doing the heavy computing and storing the results.
 
 % Shai Machnes   2010-2011
-% Ville Bergholm 2011-2016
+% Ville Bergholm 2011-2017
     
 
   properties (SetAccess = private)
@@ -140,6 +140,10 @@ classdef cache < matlab.mixin.Copyable
 
       function set_P(self, t, k, P)
       % Sets P{t, k} to the given value. FIXME TODO should it be set for every ensemble member?
+      % P is either a fixed propagator matrix, or a function handle with the calling syntax
+      %   U{t+1, k} = P(t, U{t, k}, false)
+      %   L{t, k}   = P(t, L{t+1, k}, true)
+
           for ind = t
               self.P{ind, k} = P;
               self.H{ind, k} = NaN;
@@ -217,9 +221,9 @@ classdef cache < matlab.mixin.Copyable
               % finite_diff ones invalid?, and even the finite_diff
               % ones have to be computed using an integrator?
 
-              % FIXME with crosstalk currently taus must not change
-              % (because a changing tau would invalidate every
-              % propagator following it too)
+              % FIXME if there are time-dependent terms in the
+              % generators (e.g. crosstalk) taus must not change
+              % (because a changing a tau would invalidate every propagator following it)
           end
           % Compute the Hamiltonians
           for t=h_idx

@@ -49,5 +49,7 @@ b bugfix
               * utils/control_ops:  Normalization changed for the Liouvillians (now lowest eigenvalue == -1)
               + dynamo/frobenius_error
               + dynamo/evaluate_X
+              + dynamo/set_state_transform
+              + control_seq/full_mask
               + control_seq/transform
               + cache/combined_propagator

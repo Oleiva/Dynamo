@@ -39,8 +39,8 @@ H_drift = heisenberg(dim, @(s,a,b) J(s)*C(a,b));
 %c_labels = {'X', 'Y'};
 
 % limit driving Rabi frequency to the interval [-1, 1]
-control_type = '..';
-temp = [-1,2] * 10;
+control_type = 'mm';
+temp = [-1,2] * 12;
 control_par = {temp, temp};
 
 
@@ -93,7 +93,7 @@ switch task
     % pure state transfer
     T = 0.72;
 
-  case 'closed state'
+  case {'closed state', 'closed state overlap'}
     % mixed state transfer
     a = 0.6;
     initial = a * initial * initial' +(1-a) * eye(D) / D;
@@ -168,16 +168,13 @@ dyn.system.set_labels(desc, dim, c_labels);
 dyn.seq_init(bins, T * [1, 0], control_type, control_par);
 
 % random, constant initial controls
-dyn.shake(0, 0.4, false);
-
-% do not optimize taus
-mask = dyn.full_mask(false);
+dyn.set_controls(0.01*randn(1,2));
 
 
 %% Now do the actual search
 
 dyn.ui_open();
-dyn.search(mask);
+dyn.search();
 %dyn.analyze();
 %figure; dyn.plot_pop();
 end

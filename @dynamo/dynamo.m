@@ -298,6 +298,7 @@ classdef dynamo < matlab.mixin.Copyable
 
         % init miscellaneous things
         self.config.ui_fig = [];
+        self.opt = [];
         self.stats = {};
     end
 
@@ -332,38 +333,19 @@ classdef dynamo < matlab.mixin.Copyable
         self.cache_init();
     end
 
-    function mask = set_state_transform(self, t, k, P)
+
+    function set_state_transform(self, t, k, P)
     % Replaces the propagator for time slice t with an arbitrary state transform,
     % e.g. a subspace projector.
+    % P is either a fixed propagator matrix, or a function handle with the calling syntax
+    %   U{t+1, k} = P(t, U{t, k}, false)
+    %   L{t, k}   = P(t, L{t+1, k}, true)
+
         self.cache.set_P(t, k, P);
-        self.seq.raw(t, 1:end-1) = pi/2;  % set the phantom controls to zero to make the sequence look nicer
+        self.seq.raw(t, 1:end-1) = NaN; % set the phantom controls to NaN to make the plotted sequence look nicer
         self.seq.transform();
         % do not update the controls so as to not overwrite P_xy
-        % TODO better solution needed
-        mask = self.full_mask(true);
-        mask(t,:) = false;
-    end
-
-    function mask = full_mask(self, optimize_tau)
-    % Returns a full control mask.
-        
-        n_timeslots = self.seq.n_timeslots();
-        n_controls = self.seq.n_controls();
-
-        % shape vectors
-        f_shape = [n_timeslots, n_controls];
-        t_shape = [n_timeslots, 1];
-
-        %% Build the control mask
-
-        fprintf('Tau values ');
-        if optimize_tau
-            fprintf('optimized.\n');
-            mask = [true(f_shape), true(t_shape)];
-        else
-            fprintf('fixed.\n')
-            mask = [true(f_shape), false(t_shape)];
-        end
+        self.seq.mask(t,:) = false;
     end
 
 
@@ -373,7 +355,7 @@ classdef dynamo < matlab.mixin.Copyable
 
         % gradient requires a control mask
         if nargout == 2 && (nargin < 2 || isempty(control_mask))
-            control_mask = self.full_mask(false);
+            control_mask = self.seq.mask;  % use default
         end
 
         % set up stuff for the error functions
@@ -480,7 +462,7 @@ classdef dynamo < matlab.mixin.Copyable
         new(control_mask) = raw;
 
         % see which timeslots have changed
-        changed_t_mask = any(new ~= old, 2);
+        changed_t_mask = any(new ~= old & ~isnan(old), 2);
 
         if any(changed_t_mask)
             % actually update the controls

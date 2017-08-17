@@ -85,7 +85,7 @@ end
 d.cache_init()
 
 % full gradient, including tau
-mask = d.full_mask(true);
+mask = d.seq.full_mask(true);
 
 
 switch test

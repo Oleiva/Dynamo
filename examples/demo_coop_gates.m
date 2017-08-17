@@ -23,7 +23,7 @@ function [dyn, U1, U2] = demo_coop_gates(d_extra)
 %
 %! M. Braun and S. Glaser, New J. Phys. 16, 115002 (2014).
 
-% Ville Bergholm 2015-2016
+% Ville Bergholm 2015-2017
 
 
 % We may do the propagation either in Hilbert or Liouville space.
@@ -100,7 +100,6 @@ dyn.seq_init(n_bins, T * [0.5, 1]);
 
 % random, constant initial controls
 dyn.set_controls(0.1 * randn(1, length(H_ctrl)));
-mask = dyn.full_mask(false);
 
 
 %% Set up the projection
@@ -108,18 +107,17 @@ mask = dyn.full_mask(false);
 % replace the propagator in the middle bin by P_xy
 t = ceil(n_bins/2);
 if use_liouville_space
-    %temp = dyn.set_state_transform(t, 1, P_xy);
-    temp = dyn.set_state_transform(t, 1, @proj_liouville);
+    %dyn.set_state_transform(t, 1, P_xy);
+    dyn.set_state_transform(t, 1, @proj_liouville);
 else
-    temp = dyn.set_state_transform(t, 1, @proj_hilbert);
+    dyn.set_state_transform(t, 1, @proj_hilbert);
 end
-mask = mask & temp;  % avoid clobbering it during update
 
 
 %% Optimize and test the result
 
 dyn.ui_open();
-dyn.search(mask);
+dyn.search();
 
 % extract the resulting pair of co-operating gates
 U1 = dyn.cache.combined_propagator(1, t-1);

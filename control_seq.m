@@ -1,7 +1,7 @@
 classdef control_seq < matlab.mixin.Copyable
 % Copyable handle class for control sequences.
 
-% Ville Bergholm 2011-2016
+% Ville Bergholm 2011-2017
 
   properties
       tau_par        % parametrization of tau, size == [n_timeslots, 2]
@@ -9,6 +9,7 @@ classdef control_seq < matlab.mixin.Copyable
       control_par    % cell array of control parameter structs, size == [n_controls]
 
       raw            % untransformed control fields, last column is for tau: size == [n_timeslots, n_controls + 1]
+      mask           % which controls can be changed during optimization? boolean array, same size as raw above.
       % the data below are computed from raw using the control parametrization
       tau            % timeslice duration, size == [n_timeslots]
       tau_deriv      % d tau / d tau_raw
@@ -52,6 +53,9 @@ classdef control_seq < matlab.mixin.Copyable
 
         % init raw params to some reasonable values, but do not transform them yet
         self.raw = [zeros(n_timeslots, n_controls), acos(0) * ones(n_timeslots, 1)]; % tau: halfway
+
+        % by default update all the controls except taus
+        self.mask = self.full_mask(false);
     end
 
     
@@ -65,8 +69,31 @@ classdef control_seq < matlab.mixin.Copyable
     % Returns the number of control fields (not including tau).
         ret = length(self.control_type);
     end
-    
-    
+
+
+    function mask = full_mask(self, optimize_tau)
+    % Returns a full control mask.
+
+        n_timeslots = self.n_timeslots();
+        n_controls = self.n_controls();
+
+        % shape vectors
+        f_shape = [n_timeslots, n_controls];
+        t_shape = [n_timeslots, 1];
+
+        %% Build the control mask
+
+        fprintf('Tau values ');
+        if optimize_tau
+            fprintf('optimized.\n');
+            mask = [true(f_shape), true(t_shape)];
+        else
+            fprintf('fixed.\n')
+            mask = [true(f_shape), false(t_shape)];
+        end
+    end
+
+
     function ret = get_raw(self, control_mask)
     % Returns the raw controls corresponding to the mask given, or all
     % of them if no mask is given.

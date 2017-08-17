@@ -129,7 +129,7 @@ dyn.seq_init(n_bins, T * [0.5, 1.5]); %, control_type, control_par);
 dyn.set_controls(0.1 * randn(1, n_controls));
 
 %dyn.ui_open();
-%dyn.search(dyn.full_mask(false));
+%dyn.search();
 end
 
 
